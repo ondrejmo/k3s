@@ -1,0 +1,54 @@
+
+---
+
+- name: download k3s-install.sh
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s-install.sh
+    mode: 0700
+    owner: root
+    group: root
+
+# DISCLAIMER: for etcd cluster use this first: k3s server --cluster-init
+- name: execute k3s-install.sh
+  ansible.builtin.shell: /tmp/k3s-install.sh
+  environment:
+    INSTALL_K3S_SKIP_SELINUX_RPM: "{% if ansible_os_family == 'RedHat' %}false{% else %}true{% endif %}"
+    # versions
+    INSTALL_K3S_VERSION: "v{{ k3s.version }}"
+    INSTALL_K3S_CHANNEL: "stable"
+    # targets
+    INSTALL_K3S_BIN_DIR: "/usr/local/bin"
+    INSTALL_K3S_SYSTEMD_DIR: "/etc/systemd/system"
+    # passing/joining
+    K3S_URL: "{{ k3s.url }}"
+    K3S_TOKEN: "{{ k3s.token }}"
+    # tuning
+    INSTALL_K3S_EXEC: |
+      {% if ansible_os_family != 'RedHat' %}
+      server
+        --bind-address={{ ansible_host }}
+        --disable servicelb
+      {% if k3s_s3 != {} %}
+        --etcd-s3
+        --etcd-s3-endpoint {{ k3s_s3.host }}
+        --etcd-s3-endpoint-ca /etc/ssl/certs/ca-certificates.crt
+        --etcd-s3-access-key {{ k3s_s3.access_key }}
+        --etcd-s3-secret-key {{ k3s_s3.secret_key }}
+        --etcd-s3-bucket {{ k3s_s3.bucket }}
+        --etcd-s3-region {{ k3s_s3.region }}
+        --etcd-s3-folder {{ k3s_s3.folder }}
+      {% endif %}
+      {% else %}
+      agent
+      {% endif %}
+      {% for key,value in k3s_labels.items() %}
+        --node-label {{ key }}={{ value | lower }}
+      {% endfor %}
+
+- name: rm k3s-install.sh
+  ansible.builtin.file:
+    path: /tmp/k3s-install.sh
+    state: absent
+  notify:
+    - reboot

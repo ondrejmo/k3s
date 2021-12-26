@@ -1,0 +1,33 @@
+---
+
+- name: remove conflicting packages
+  ansible.builtin.package:
+    state: absent
+    name:
+      # https://github.com/longhorn/longhorn/issues/3089
+      - multipath-tools
+
+# https://longhorn.io/docs/1.1.2/deploy/install/#installation-requirements
+- name: install longhorn dependencies
+  ansible.builtin.package:
+    state: present
+    name:
+      - open-iscsi
+      - nfs-common
+      - bash
+      - curl
+      - util-linux # findmnt, lsblk, blkid
+      - grep
+      - mawk
+
+- name: switch to legacy ip(6)tables
+  community.general.alternatives:
+    name: "{{ item }}"
+    path: "/usr/sbin/{{ item }}-legacy"
+  when:
+    - ansible_distribution == 'Debian'
+  loop:
+    - iptables
+    - ip6tables
+  notify:
+    - reboot

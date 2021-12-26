@@ -1,0 +1,23 @@
+---
+
+- ansible.builtin.import_tasks: dependencies/debian.yml
+  when: 
+    - ansible_lsb != {}
+    - ansible_lsb.id == 'Raspbian' or ansible_lsb.id == 'Debian' or ansible_lsb.id == 'Ubuntu'
+
+- ansible.builtin.import_tasks: dependencies/fedora.yml
+  when:   
+    - ansible_distribution == 'Fedora'
+
+- name: check k3s is installed
+  ansible.builtin.command: k3s --version
+  register: k3s_installed
+  failed_when: no
+  changed_when: no
+
+- ansible.builtin.import_tasks: install.yml
+  when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s.version.split('+')[0], '<')
+
+- ansible.builtin.import_tasks: registries.yml
+  when:
+    - k3s_registries != {}
