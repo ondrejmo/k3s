@@ -20,6 +20,13 @@
       - grep
       - mawk
 
+# longhorn (NFSv4) doesn't need it to listen
+- name: stop and disable rpcbind
+  ansible.builtin.systemd:
+    name: rpcbind
+    state: stopped
+    enabled: false
+
 - name: switch to legacy ip(6)tables
   community.general.alternatives:
     name: "{{ item }}"

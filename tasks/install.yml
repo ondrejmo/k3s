@@ -1,4 +1,3 @@
-
 ---
 
 - name: download k3s-install.sh
@@ -13,7 +12,7 @@
 - name: execute k3s-install.sh
   ansible.builtin.shell: /tmp/k3s-install.sh
   environment:
-    INSTALL_K3S_SKIP_SELINUX_RPM: "{% if ansible_os_family == 'RedHat' %}false{% else %}true{% endif %}"
+    INSTALL_K3S_SKIP_SELINUX_RPM: "true"
     # versions
     INSTALL_K3S_VERSION: "v{{ k3s.version }}"
     INSTALL_K3S_CHANNEL: "stable"
@@ -23,28 +22,25 @@
     # passing/joining
     K3S_URL: "{{ k3s.url }}"
     K3S_TOKEN: "{{ k3s.token }}"
-    # tuning
+    # tuning (https://github.com/k3s-io/k3s/pull/5603)
     INSTALL_K3S_EXEC: |
-      {% if ansible_os_family != 'RedHat' %}
       server
         --bind-address={{ ansible_host }}
-        --disable servicelb
-      {% if k3s_s3 != {} %}
-        --etcd-s3
-        --etcd-s3-endpoint {{ k3s_s3.host }}
-        --etcd-s3-endpoint-ca /etc/ssl/certs/ca-certificates.crt
-        --etcd-s3-access-key {{ k3s_s3.access_key }}
-        --etcd-s3-secret-key {{ k3s_s3.secret_key }}
-        --etcd-s3-bucket {{ k3s_s3.bucket }}
-        --etcd-s3-region {{ k3s_s3.region }}
-        --etcd-s3-folder {{ k3s_s3.folder }}
+        --disable servicelb,local-storage
+        --egress-selector-mode disabled
+        --kubelet-arg containerd=/run/k3s/containerd/containerd.sock
+        --etcd-arg quota-backend-bytes=8589934592
+        --etcd-snapshot-retention=20
+      {% if k3s_tls_san != '' %}
+        --tls-san {{ k3s_tls_san }}
       {% endif %}
-      {% else %}
-      agent
-      {% endif %}
-      {% for key,value in k3s_labels.items() %}
-        --node-label {{ key }}={{ value | lower }}
+      {% for key, value in k3s_labels.items() %}
+        --node-label {{ key }}={{ value }}
       {% endfor %}
+      {% for key, value in k3s_taints.items() %}
+        --node-taint {{ key }}={{ value }}
+      {% endfor %}
+        --flannel-backend=wireguard-native
 
 - name: rm k3s-install.sh
   ansible.builtin.file:

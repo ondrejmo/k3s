@@ -4,16 +4,15 @@
   ansible.builtin.systemd:
     name: k3s.service
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
 
-- name: restart k3s-agent
+- name: restart ulogd2
   ansible.builtin.systemd:
-    name: k3s-agent.service
+    name: ulogd2.service
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
 
 - name: reboot
   ansible.builtin.reboot:
     reboot_timeout: 120
   when: not (skip_handlers | default('no'))
-

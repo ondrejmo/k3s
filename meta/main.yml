@@ -6,19 +6,22 @@ galaxy_info:
   description: https://github.com/rancher/k3s
   company: infrastructure
   license: GLWTPL
-  min_ansible_version: 2.10
+  min_ansible_version: "2.10"
 
   galaxy_tags:
     - rpi         # works on Raspberry Pi (aarch64)
-    - nuc         # works on Intel NUC (amd64)
+    - nuc         # works on Intel NUC
 
   platforms:
-    - name: Fedora
-      versions:
-        - "34"
     - name: Ubuntu
       versions:
-        - focal
+        - jammy
     - name: Debian
       versions:
         - bullseye
+
+dependencies:
+  - role: core
+    tags:
+      - dependencies
+      - never
