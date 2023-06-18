@@ -18,11 +18,6 @@ An opinionated Ansible role, that install (and configures) k3s lightweight distr
           token: PjnYgQVXgMJecoDVP6kigghtLGIbuJIk9t9Ozg+quwPjnYgQVXgMJecoDVP6kigghtLGIbuJIk9t9Ozg+quwY
         k3s_san: 
           - k3s.example.org
-        k3s_registries: |
-          mirrors:
-            "registry.example.org:5000":
-              endpoint:
-                - "http://registry.example.org:5000"
 ```
 
 ## Changelog
