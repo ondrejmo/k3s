@@ -1,14 +1,15 @@
 ---
 
+k3s_init: false
+k3s_host: "{{ ansible_host }}"
+
 k3s:
-  version: 1.25.7+k3s1
+  version: 1.26.5+k3s1
   url: https://localhost:6443
   token: raspberry # /var/lib/rancher/k3s/server/node-token
 
-k3s_registries: ""
-
 k3s_tls_san: []
 
-k3s_labels: {}
+k3s_labels: []
 
-k3s_taints: {}
+k3s_taints: []

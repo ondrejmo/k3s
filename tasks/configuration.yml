@@ -1,0 +1,62 @@
+---
+
+- name: add audit policy
+  ansible.builtin.copy:
+    src: audit.yaml
+    dest: /var/lib/rancher/k3s/server/audit.yaml
+    mode: 0600
+    owner: root
+    group: root
+  notify:
+    - restart k3s
+
+- name: adjust configuration
+  ansible.builtin.template:
+    src: config.yaml
+    dest: /etc/rancher/k3s/config.yaml
+    mode: 0600
+    owner: root
+    group: root
+  notify:
+    - restart k3s
+
+- name: add PSA
+  ansible.builtin.copy:
+    src: psa.yaml
+    dest: /var/lib/rancher/k3s/server/psa.yaml
+    mode: 0600
+    owner: root
+    group: root
+  notify:
+    - restart k3s
+
+- name: enable ulogd2
+  ansible.builtin.systemd:
+    name: ulogd2.service
+    state: started
+    enabled: true
+
+- name: configure ulogd2
+  ansible.builtin.copy:
+    src: ulogd.conf
+    dest: /etc/ulogd.conf
+    mode: 0600
+    owner: root
+    group: root
+  notify:
+    - restart ulogd2
+
+- name: harden sysctl
+  ansible.builtin.copy:
+    src: 90-kubelet.conf
+    dest: /etc/sysctl.d/90-kubelet.conf
+    mode: 0640
+    owner: root
+    group: root
+
+- name: apply hardened/hardened sysctl
+  ansible.builtin.systemd:
+    name: systemd-sysctl.service
+    state: restarted
+    daemon_reload: true
+  changed_when: false

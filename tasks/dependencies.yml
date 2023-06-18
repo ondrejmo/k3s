@@ -1,17 +1,17 @@
 ---
 
 - name: remove conflicting packages
-  ansible.builtin.package:
+  ansible.builtin.apt:
     state: absent
     name:
       # https://github.com/longhorn/longhorn/issues/3089
       - multipath-tools
 
-# https://longhorn.io/docs/1.1.2/deploy/install/#installation-requirements
-- name: install longhorn dependencies
-  ansible.builtin.package:
+- name: install dependencies
+  ansible.builtin.apt:
     state: present
     name:
+      # https://longhorn.io/docs/1.1.2/deploy/install/#installation-requirements 
       - open-iscsi
       - nfs-common
       - bash
@@ -19,11 +19,20 @@
       - util-linux # findmnt, lsblk, blkid
       - grep
       - mawk
+      # networkpolicy logging
+      - ulogd2
+      - ulogd2-json
 
 # longhorn (NFSv4) doesn't need it to listen
 - name: stop and disable rpcbind
   ansible.builtin.systemd:
-    name: rpcbind
+    name: rpcbind.service
+    state: stopped
+    enabled: false
+
+- name: stop and disable rpcbind.socket
+  ansible.builtin.systemd:
+    name: rpcbind.socket
     state: stopped
     enabled: false
 

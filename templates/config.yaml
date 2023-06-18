@@ -1,0 +1,40 @@
+---
+
+{% if not k3s_init %}
+{% if k3s.url|length > 0 and k3s.token|length > 0 %}
+server: {{ k3s.url }}
+token: {{ k3s.token }}
+{% endif %}
+{% endif %}
+
+protect-kernel-defaults: true
+bind-address: {{ k3s_host }}
+flannel-backend: wireguard-native
+etcd-snapshot-retention: 20
+disable:
+  - servicelb
+  - local-storage
+
+kube-apiserver-arg:
+  - admission-control-config-file=/var/lib/rancher/k3s/server/psa.yaml
+  - audit-log-path=/var/lib/rancher/k3s/server/logs/audit.log
+  - audit-policy-file=/var/lib/rancher/k3s/server/audit.yaml
+  - audit-log-maxage=30
+  - audit-log-maxbackup=10
+  - audit-log-maxsize=100
+  - request-timeout=300s
+  - service-account-lookup=true
+kube-controller-manager-arg:
+  - terminated-pod-gc-threshold=10
+  - use-service-account-credentials=true
+kubelet-arg:
+  - streaming-connection-idle-timeout=5m
+  - make-iptables-util-chains=true
+  - containerd=/run/k3s/containerd/containerd.sock
+etcd-arg:
+  # double the default
+  - quota-backend-bytes=8589934592
+
+tls-san: {{ k3s_tls_san }}
+node-label: {{ k3s_labels }}
+node-taint: {{ k3s_taints }}

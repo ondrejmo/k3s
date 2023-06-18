@@ -1,8 +1,15 @@
 ---
 
-- ansible.builtin.import_tasks: dependencies.yml
-
-- ansible.builtin.import_tasks: networkpolicies.yml
+- name: mkdirs
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}"
+    mode: 0700
+    owner: root
+    group: root
+  loop:
+    - /var/lib/rancher/k3s/server/logs
+    - /etc/rancher/k3s
 
 - name: check k3s is installed
   ansible.builtin.command: k3s --version
@@ -13,113 +20,12 @@
 - ansible.builtin.import_tasks: install.yml
   when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s.version.split('+')[0], '<')
 
-- ansible.builtin.import_tasks: registries.yml
-  when:
-    - k3s_registries != ""
+- ansible.builtin.import_tasks: dependencies.yml
 
-- name: mkdir /var/lib/rancher/k3s/server/logs
-  ansible.builtin.file:
-    state: directory
-    path: /var/lib/rancher/k3s/server/logs
-    mode: 0700
-    owner: root
-    group: root
+- ansible.builtin.import_tasks: configuration.yml
 
-- name: add audit policy
-  ansible.builtin.copy:
-    dest: /var/lib/rancher/k3s/server/audit.yaml
-    mode: 0600
-    owner: root
-    group: root
-    content: |
-      ---
-
-      apiVersion: audit.k8s.io/v1
-      kind: Policy
-      omitStages:
-        - RequestReceived
-      rules:
-        # Ignore reading stuff
-        - level: None
-          verbs: ["get", "watch", "list"]
-        
-        # Log metadata about writing stuff
-        - level: Metadata
-  notify:
-    - restart k3s
-
-- name: add PSA
-  ansible.builtin.copy:
-    dest: /var/lib/rancher/k3s/server/psa.yaml
-    mode: 0600
-    owner: root
-    group: root
-    content: |
-      ---
-
-      apiVersion: apiserver.config.k8s.io/v1
-      kind: AdmissionConfiguration
-      plugins:
-        - name: PodSecurity
-          configuration:
-            apiVersion: pod-security.admission.config.k8s.io/v1beta1
-            kind: PodSecurityConfiguration
-            defaults:
-              enforce: "privileged"
-              enforce-version: "v{{ k3s.version.split("+")[0].split('.')[0:2] | join('.') }}"
-              audit: "baseline"
-              audit-version: "v{{ k3s.version.split("+")[0].split('.')[0:2] | join('.') }}"
-              warn: "baseline"
-              warn-version: "v{{ k3s.version.split("+")[0].split('.')[0:2] | join('.') }}"
-            exemptions:
-              usernames: []
-              runtimeClasses: []
-              namespaces: []
-  notify:
-    - restart k3s
-
-- name: adjust configuration
-  ansible.builtin.copy:
-    dest: /etc/rancher/k3s/config.yaml
-    mode: 0600
-    owner: root
-    group: root
-    content: |
-      ---
-
-      protect-kernel-defaults: true
-      kube-apiserver-arg:
-        - 'admission-control-config-file=/var/lib/rancher/k3s/server/psa.yaml'
-        - 'audit-log-path=/var/lib/rancher/k3s/server/logs/audit.log'
-        - 'audit-policy-file=/var/lib/rancher/k3s/server/audit.yaml'
-        - 'audit-log-maxage=30'
-        - 'audit-log-maxbackup=10'
-        - 'audit-log-maxsize=100'
-        - 'request-timeout=300s'
-        - 'service-account-lookup=true'
-      kube-controller-manager-arg:
-        - 'terminated-pod-gc-threshold=10'
-        - 'use-service-account-credentials=true'
-      kubelet-arg:
-        - 'streaming-connection-idle-timeout=5m'
-        - 'make-iptables-util-chains=true'
-  notify:
-    - restart k3s
-
-- name: sysctl hardening
-  ansible.posix.sysctl:
-    state: present
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-  loop:
-    # https://docs.k3s.io/security/hardening-guide
-    - name: vm.panic_on_oom
-      value: 0
-    - name: vm.overcommit_memory
-      value: 1
-    - name: kernel.panic
-      value: 10
-    - name: kernel.panic_on_oops
-      value: 1
-    - name: kernel.keys.root_maxbytes
-      value: 25000000
+- name: start k3s
+  ansible.builtin.systemd:
+    name: k3s
+    state: started
+    enabled: true

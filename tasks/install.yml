@@ -12,35 +12,10 @@
 - name: execute k3s-install.sh
   ansible.builtin.shell: /tmp/k3s-install.sh
   environment:
+    INSTALL_K3S_SKIP_START: "true"
+    INSTALL_K3S_SKIP_ENABLE: "true"
     INSTALL_K3S_SKIP_SELINUX_RPM: "true"
-    # versions
     INSTALL_K3S_VERSION: "v{{ k3s.version }}"
-    INSTALL_K3S_CHANNEL: "stable"
-    # targets
-    INSTALL_K3S_BIN_DIR: "/usr/local/bin"
-    INSTALL_K3S_SYSTEMD_DIR: "/etc/systemd/system"
-    # passing/joining
-    K3S_URL: "{{ k3s.url }}"
-    K3S_TOKEN: "{{ k3s.token }}"
-    # tuning (https://github.com/k3s-io/k3s/pull/5603)
-    INSTALL_K3S_EXEC: |
-      server
-        --bind-address={{ ansible_host }}
-        --disable servicelb,local-storage
-        --egress-selector-mode disabled
-        --kubelet-arg containerd=/run/k3s/containerd/containerd.sock
-        --etcd-arg quota-backend-bytes=8589934592
-        --etcd-snapshot-retention=20
-      {% if k3s_tls_san != '' %}
-        --tls-san {{ k3s_tls_san }}
-      {% endif %}
-      {% for key, value in k3s_labels.items() %}
-        --node-label {{ key }}={{ value }}
-      {% endfor %}
-      {% for key, value in k3s_taints.items() %}
-        --node-taint {{ key }}={{ value }}
-      {% endfor %}
-        --flannel-backend=wireguard-native
 
 - name: rm k3s-install.sh
   ansible.builtin.file:

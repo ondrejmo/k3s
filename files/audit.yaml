@@ -1,0 +1,14 @@
+---
+
+apiVersion: audit.k8s.io/v1
+kind: Policy
+
+omitStages:
+  - RequestReceived
+rules:
+  # Ignore reading stuff
+  - level: None
+    verbs: ["get", "watch", "list"]
+  
+  # Log metadata about writing stuff
+  - level: Metadata
