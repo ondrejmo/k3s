@@ -1,0 +1,1 @@
+{{ k3s_registries | string | from_yaml | to_nice_yaml }}

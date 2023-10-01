@@ -1,10 +1,8 @@
 ---
 
-{% if not k3s_init %}
 {% if k3s.url|length > 0 and k3s.token|length > 0 %}
 server: {{ k3s.url }}
 token: {{ k3s.token }}
-{% endif %}
 {% endif %}
 
 protect-kernel-defaults: true

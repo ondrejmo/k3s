@@ -9,8 +9,8 @@ galaxy_info:
   min_ansible_version: "2.10"
 
   galaxy_tags:
-    - rpi         # works on Raspberry Pi (aarch64)
-    - nuc         # works on Intel NUC
+    - amd64
+    - arm64
 
   platforms:
     - name: Ubuntu

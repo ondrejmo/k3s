@@ -1,0 +1,16 @@
+---
+
+{% if k3s.url|length > 0 and k3s.token|length > 0 %}
+server: {{ k3s.url }}
+token: {{ k3s.token }}
+{% endif %}
+
+protect-kernel-defaults: true
+
+kubelet-arg:
+  - streaming-connection-idle-timeout=5m
+  - make-iptables-util-chains=true
+  - containerd=/run/k3s/containerd/containerd.sock
+
+node-label: {{ k3s_labels }}
+node-taint: {{ k3s_taints }}

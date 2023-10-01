@@ -12,7 +12,7 @@
 
 - name: adjust configuration
   ansible.builtin.template:
-    src: config.yaml
+    src: "config.{{ k3s_role }}.yaml"
     dest: /etc/rancher/k3s/config.yaml
     mode: 0600
     owner: root
@@ -50,7 +50,7 @@
   ansible.builtin.copy:
     src: 90-kubelet.conf
     dest: /etc/sysctl.d/90-kubelet.conf
-    mode: 0640
+    mode: 0644
     owner: root
     group: root
 

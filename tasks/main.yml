@@ -24,8 +24,19 @@
 
 - ansible.builtin.import_tasks: configuration.yml
 
+# https://rancher.com/docs/k3s/latest/en/installation/private-registry/
+- name: configure private registries
+  ansible.builtin.template:
+    src: registries.yaml
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: 0600
+    owner: root
+    group: root
+  notify:
+    - restart k3s
+
 - name: start k3s
   ansible.builtin.systemd:
-    name: k3s
+    name: k3s{% if k3s_role == 'agent' %}-agent{% endif %}.service
     state: started
     enabled: true

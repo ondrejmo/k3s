@@ -1,15 +1,31 @@
 ---
 
-k3s_init: false
+k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
 k3s:
-  version: 1.26.5+k3s1
-  url: https://localhost:6443
-  token: raspberry # /var/lib/rancher/k3s/server/node-token
+  version: 1.27.6+k3s1
+  url: ""
+  token: "" # /var/lib/rancher/k3s/server/node-token
+  role: server # agent
 
 k3s_tls_san: []
 
 k3s_labels: []
 
 k3s_taints: []
+
+k3s_registries:
+  mirrors:
+    docker.io:
+      endpoint:
+        - "https://mycustomreg.com:5000"
+  configs:
+    "mycustomreg:5000":
+      auth:
+        username: xxxxxx # this is the registry username
+        password: xxxxxx # this is the registry password
+      tls:
+        cert_file: # path to the cert file used in the registry
+        key_file:  # path to the key file used in the registry
+        ca_file:   # path to the ca file used in the registry
