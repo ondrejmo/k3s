@@ -6,6 +6,7 @@ token: {{ k3s.token }}
 {% endif %}
 
 protect-kernel-defaults: true
+secrets-encryption: true
 bind-address: {{ k3s_host }}
 flannel-backend: wireguard-native
 etcd-snapshot-retention: 20

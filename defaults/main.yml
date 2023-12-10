@@ -4,7 +4,7 @@ k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
 k3s:
-  version: 1.27.6+k3s1
+  version: 1.28.4+k3s2
   url: ""
   token: "" # /var/lib/rancher/k3s/server/node-token
   role: server # agent

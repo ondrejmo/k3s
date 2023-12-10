@@ -20,8 +20,4 @@ galaxy_info:
       versions:
         - bullseye
 
-dependencies:
-  - role: core
-    tags:
-      - dependencies
-      - never
+dependencies: []
