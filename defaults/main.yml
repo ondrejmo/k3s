@@ -1,13 +1,12 @@
 ---
 
+k3s_version: 1.28.4+k3s2
 k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
-k3s:
-  version: 1.28.4+k3s2
+k3s_registration:
   url: ""
   token: "" # /var/lib/rancher/k3s/server/node-token
-  role: server # agent
 
 k3s_tls_san: []
 
@@ -19,7 +18,7 @@ k3s_registries:
   mirrors:
     docker.io:
       endpoint:
-        - "https://mycustomreg.com:5000"
+        - https://mycustomreg.com:5000
   configs:
     "mycustomreg:5000":
       auth:
@@ -29,3 +28,7 @@ k3s_registries:
         cert_file: # path to the cert file used in the registry
         key_file:  # path to the key file used in the registry
         ca_file:   # path to the ca file used in the registry
+
+k3s_prometheus_operator_version: "0.70.0"
+
+k3s_cilium_version: "1.14.5"

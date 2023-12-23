@@ -16,7 +16,7 @@
     INSTALL_K3S_SKIP_START: "true"
     INSTALL_K3S_SKIP_ENABLE: "true"
     INSTALL_K3S_SKIP_SELINUX_RPM: "true"
-    INSTALL_K3S_VERSION: "v{{ k3s.version }}"
+    INSTALL_K3S_VERSION: "v{{ k3s_version }}"
 
 - name: rm k3s-install.sh
   ansible.builtin.file:

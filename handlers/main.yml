@@ -6,12 +6,6 @@
     state: restarted
     daemon_reload: true
 
-- name: restart ulogd2
-  ansible.builtin.systemd:
-    name: ulogd2.service
-    state: restarted
-    daemon_reload: true
-
 - name: reboot
   ansible.builtin.reboot:
     reboot_timeout: 120

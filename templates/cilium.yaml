@@ -1,0 +1,54 @@
+---
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cilium
+  namespace: kube-system
+
+
+spec:
+  repo: https://helm.cilium.io/
+  chart: cilium
+  bootstrap: true
+  version: "v{{ k3s_cilium_version }}"
+  targetNamespace: kube-system
+  valuesContent: |-
+    kubeProxyReplacement: true
+    # DISCLAIMER: this will bite in the ass in setup with multiple masters
+    k8sServiceHost: {{ k3s_host }}
+    k8sServicePort: 6443
+    encryption:
+      enabled: true
+      type: wireguard
+      nodeEncryption: true
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        trustCRDsExist: true
+    operator:
+      replicas: 1
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    hubble:
+      enabled: true
+      metrics:
+        # enabled: ...
+        enableOpenMetrics: true
+        serviceMonitor:
+          enabled: true
+      relay:
+        enabled: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+      ui:
+        enabled: true
+        frontend:
+          server:
+            ipv6:
+              enabled: false

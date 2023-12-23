@@ -12,9 +12,8 @@
       - util-linux # findmnt, lsblk, blkid
       - grep
       - mawk
-      # networkpolicy logging
-      - ulogd2
-      - ulogd2-json
+      # cillium (DISCLAIMER: bash is already present, used only as dummy value instead of empty string)
+      - "{% if ansible_distribution == 'Ubuntu' and ansible_architecture != 'x86_64' %}linux-modules-extra-raspi{% else %}bash{% endif %}"
 
 # longhorn (NFSv4) doesn't need it to listen
 - name: stop and disable rpcbind
@@ -28,15 +27,3 @@
     name: rpcbind.socket
     state: stopped
     enabled: false
-
-- name: switch to legacy ip(6)tables
-  community.general.alternatives:
-    name: "{{ item }}"
-    path: "/usr/sbin/{{ item }}-legacy"
-  when:
-    - ansible_distribution == 'Debian'
-  loop:
-    - iptables
-    - ip6tables
-  notify:
-    - reboot

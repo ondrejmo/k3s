@@ -30,21 +30,29 @@
   notify:
     - restart k3s
 
-- name: enable ulogd2
-  ansible.builtin.systemd:
-    name: ulogd2.service
-    state: started
-    enabled: true
-
-- name: configure ulogd2
-  ansible.builtin.copy:
-    src: ulogd.conf
-    dest: /etc/ulogd.conf
+# DISCLAIMER: this is depdency to cillium configuration
+- name: add prometheus-operator
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v{{ k3s_prometheus_operator_version }}/bundle.yaml"
+    dest: /var/lib/rancher/k3s/server/manifests/prometheus-operator.yaml
     mode: 0600
     owner: root
     group: root
+  changed_when: false
+  when:
+    - k3s_role == 'server'
+
+- name: add cilium
+  ansible.builtin.template:
+    src: cilium.yaml
+    dest: /var/lib/rancher/k3s/server/manifests/cilium.yaml
+    mode: 0600
+    owner: root
+    group: root
+  when:
+    - k3s_role == 'server'
   notify:
-    - restart ulogd2
+    - restart k3s
 
 - name: harden sysctl
   ansible.builtin.copy:

@@ -1,11 +1,12 @@
 ---
 
-{% if k3s.url|length > 0 and k3s.token|length > 0 %}
-server: {{ k3s.url }}
-token: {{ k3s.token }}
-{% endif %}
+{% if 'url' in k3s_registration and 'token' in k3s_registration and k3s_registration.url|length > 0 and k3s_registration.token|length > 0 %}
+server: {{ k3s_registration.url }}
+token: {{ k3s_registration.token }}
 
+{% endif %}
 protect-kernel-defaults: true
+node-name: {{ inventory_hostname }}
 
 kubelet-arg:
   - streaming-connection-idle-timeout=5m
