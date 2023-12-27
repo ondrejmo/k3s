@@ -33,8 +33,19 @@
 # DISCLAIMER: this is depdency to cillium configuration
 - name: add prometheus-operator
   ansible.builtin.get_url:
-    url: "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v{{ k3s_prometheus_operator_version }}/bundle.yaml"
+    url: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_prometheus_operator_version }}/stripped-down-crds.yaml"
     dest: /var/lib/rancher/k3s/server/manifests/prometheus-operator.yaml
+    mode: 0600
+    owner: root
+    group: root
+  changed_when: false
+  when:
+    - k3s_role == 'server'
+
+- name: download cilium chart
+  ansible.builtin.get_url:
+    url: "https://github.com/cilium/charts/raw/master/cilium-{{ k3s_cilium_version }}.tgz"
+    dest: "/var/lib/rancher/k3s/server/static/charts/cilium-{{ k3s_cilium_version }}.tgz"
     mode: 0600
     owner: root
     group: root

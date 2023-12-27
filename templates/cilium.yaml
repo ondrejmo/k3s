@@ -6,13 +6,10 @@ metadata:
   name: cilium
   namespace: kube-system
 
-
 spec:
-  repo: https://helm.cilium.io/
-  chart: cilium
-  bootstrap: true
-  version: "v{{ k3s_cilium_version }}"
+  chart: https://{{ k3s_host }}:6443/static/charts/cilium-{{ k3s_cilium_version }}.tgz
   targetNamespace: kube-system
+  bootstrap: true
   valuesContent: |-
     kubeProxyReplacement: true
     # DISCLAIMER: this will bite in the ass in setup with multiple masters
@@ -52,3 +49,6 @@ spec:
           server:
             ipv6:
               enabled: false
+    ipam:
+      operator:
+        clusterPoolIPv4PodCIDRList: [ 10.42.0.0/16 ]
