@@ -10,6 +10,7 @@
   loop:
     - /var/lib/rancher/k3s/server/logs
     - /var/lib/rancher/k3s/server/manifests
+    - /var/lib/rancher/k3s/server/static/charts
     - /etc/rancher/k3s
 
 - name: check k3s is installed

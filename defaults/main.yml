@@ -1,12 +1,24 @@
 ---
 
-k3s_version: 1.28.4+k3s2
+k3s_version: 1.28.5+k3s1
 k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
 k3s_registration:
   url: ""
   token: "" # /var/lib/rancher/k3s/server/node-token
+
+k3s_pvs: []
+# - name: data10
+#   type: nfs
+#   host: fenrir2.home.arpa
+#   size: 2048GiB
+#   path: /mnt/disk2/public/
+# - name: data02
+#   type: ext4
+#   host: fenrir5
+#   size: 256GiB
+#   path: /mnt/disk0/public/
 
 k3s_tls_san: []
 
@@ -29,6 +41,6 @@ k3s_registries:
         key_file:  # path to the key file used in the registry
         ca_file:   # path to the ca file used in the registry
 
-k3s_prometheus_operator_version: "0.70.0"
+k3s_prometheus_operator_version: "0.71.2"
 
-k3s_cilium_version: "1.14.5"
+k3s_cilium_version: "1.14.6"

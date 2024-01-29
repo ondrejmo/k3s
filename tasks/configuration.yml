@@ -53,15 +53,18 @@
   when:
     - k3s_role == 'server'
 
-- name: add cilium
+- name: add manifests
   ansible.builtin.template:
-    src: cilium.yaml
-    dest: /var/lib/rancher/k3s/server/manifests/cilium.yaml
+    src: "{{ item }}"
+    dest: "/var/lib/rancher/k3s/server/manifests/{{ item }}"
     mode: 0600
     owner: root
     group: root
   when:
     - k3s_role == 'server'
+  loop:
+    - cilium.yaml
+    - persistentvolumes.yaml
   notify:
     - restart k3s
 

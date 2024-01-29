@@ -32,8 +32,28 @@ spec:
           enabled: true
     hubble:
       enabled: true
+      # export:
+      #   static:
+      #     enabled: true
+      #     filePath: /var/run/cilium/hubble/events.log
+      #     allowList:
+      #       - '{"verdict":["DROPPED","ERROR"]}'
+      #       # VERDICT_UNKNOWN = 0;
+      #       # FORWARDED = 1;
+      #       # DROPPED = 2;
+      #       # ERROR = 3;
+      #       # AUDIT = 4;
+      #       # REDIRECTED = 5;
       metrics:
-        # enabled: ...
+        enabled: 
+          - dns 
+          - drop
+          - flow
+          - flows-to-world
+          - httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction
+          - icmp
+          - port-distribution
+          - tcp
         enableOpenMetrics: true
         serviceMonitor:
           enabled: true

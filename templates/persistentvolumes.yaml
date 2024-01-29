@@ -1,0 +1,73 @@
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ext4
+
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs
+
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+{% for pv in k3s_pvs %}
+{% if pv.type == 'nfs' %}
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ pv.name }}
+
+spec:
+  capacity:
+    storage: {{ pv.size }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ pv.type }}
+  nfs:
+    server: {{ pv.host }}
+    path: {{ pv.path }}
+
+{% elif pv.type == 'ext4' %}
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ pv.name }}
+
+spec:
+  capacity:
+    # DISCLAIMER: verify that longhorn reserves at least 256Gi if using the same drive
+    storage: {{ pv.size }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ pv.type }}
+  local:
+    path: {{ pv.path }}
+  nodeAffinity:
+    required:
+       nodeSelectorTerms:
+         - matchExpressions:
+             - key: kubernetes.io/hostname
+               operator: In
+               values:
+                 - {{ pv.host }}
+
+{% else %}
+# ERROR: uknown pv.type - '{{ pv.type }}'
+
+{% endif %}
+{% endfor %}
