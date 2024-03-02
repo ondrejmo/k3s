@@ -1,6 +1,6 @@
 ---
 
-k3s_version: 1.28.5+k3s1
+k3s_version: 1.28.7+k3s1
 k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
