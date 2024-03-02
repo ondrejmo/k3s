@@ -13,6 +13,7 @@ flannel-backend: none
 disable-network-policy: true
 disable-kube-proxy: true
 etcd-snapshot-retention: 20
+embedded-registry: true
 disable:
   - servicelb
   - local-storage

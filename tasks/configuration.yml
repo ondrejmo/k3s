@@ -30,19 +30,33 @@
   notify:
     - restart k3s
 
-# DISCLAIMER: this is depdency to cillium configuration
-- name: add prometheus-operator
+- name: add crds
   ansible.builtin.get_url:
-    url: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_prometheus_operator_version }}/stripped-down-crds.yaml"
-    dest: /var/lib/rancher/k3s/server/manifests/prometheus-operator.yaml
+    url: "{{ item.url }}"
+    dest: "/var/lib/rancher/k3s/server/manifests/{{ item.name }}"
     mode: 0600
     owner: root
     group: root
   changed_when: false
+  loop:
+    - name: prometheus-operator.yaml
+      url: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_prometheus_operator_version }}/stripped-down-crds.yaml"
+    - name: gatewayclasses.yaml
+      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml"
+    - name: gateways.yaml
+      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_gateways.yaml"
+    - name: httproutes.yaml
+      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml"
+    - name: referencegrants.yaml
+      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml"
+    - name: grpcroutes.yaml
+      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/experimental/gateway.networking.k8s.io_grpcroutes.yaml"
+    - name: tlsroutes.yaml
+      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml"
   when:
     - k3s_role == 'server'
 
-- name: download cilium chart
+- name: add cilium chart
   ansible.builtin.get_url:
     url: "https://github.com/cilium/charts/raw/master/cilium-{{ k3s_cilium_version }}.tgz"
     dest: "/var/lib/rancher/k3s/server/static/charts/cilium-{{ k3s_cilium_version }}.tgz"

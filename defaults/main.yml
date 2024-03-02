@@ -41,6 +41,8 @@ k3s_registries:
         key_file:  # path to the key file used in the registry
         ca_file:   # path to the ca file used in the registry
 
-k3s_prometheus_operator_version: "0.71.2"
+k3s_gateway_api_version: "1.0.0"
 
-k3s_cilium_version: "1.14.6"
+k3s_cilium_version: "1.15.1"
+
+k3s_prometheus_operator_version: "0.71.2"
