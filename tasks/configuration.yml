@@ -96,3 +96,8 @@
     state: restarted
     daemon_reload: true
   changed_when: false
+
+- name: patch k3s-uninstall.sh
+  ansible.posix.patch:
+    src: k3s-killall.patch
+    dest: /usr/local/bin/k3s-killall.sh

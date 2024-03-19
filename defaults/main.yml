@@ -43,6 +43,6 @@ k3s_registries:
 
 k3s_gateway_api_version: "1.0.0"
 
-k3s_cilium_version: "1.15.1"
+k3s_cilium_version: "1.15.2"
 
-k3s_prometheus_operator_version: "0.71.2"
+k3s_prometheus_operator_version: "0.72.0"

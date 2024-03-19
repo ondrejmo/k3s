@@ -1,0 +1,20 @@
+--- roles/k3s/files/k3s-killall.sh	2024-03-19 07:42:43.249411883 +0100
++++ roles/k3s/files/k3s-killall.patched.sh	2024-03-19 07:42:29.329350962 +0100
+@@ -53,6 +53,9 @@
+     ip link delete kube-ipvs0
+     ip link delete flannel-wg
+     ip link delete flannel-wg-v6
++    ip link delete cilium_host
++    ip link delete cilium_net
++    ip link delete cilium_wg
+ 
+     # Restart tailscale
+     if [ -n "$(command -v tailscale)" ]; then
+@@ -86,5 +89,5 @@
+ remove_interfaces
+ 
+ rm -rf /var/lib/cni/
+-iptables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | iptables-restore
+-ip6tables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | ip6tables-restore
++iptables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | grep -iv cilium | iptables-restore
++ip6tables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | grep -iv cilium | ip6tables-restore
