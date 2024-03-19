@@ -10,5 +10,19 @@ rules:
   - level: None
     verbs: ["get", "watch", "list"]
   
+  - level: None
+    userGroups:
+    # Do not log from kube-system accounts
+    - system:serviceaccounts:kube-system
+    # Don't log nodes communications
+    - system:nodes
+  
+  - level: None
+    users:
+    - system:apiserver
+    - system:kube-scheduler
+    - system:kube-controller-manager
+    - system:node
+
   # Log metadata about writing stuff
   - level: Metadata
