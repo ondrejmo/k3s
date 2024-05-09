@@ -23,6 +23,7 @@ rules:
     - system:kube-scheduler
     - system:kube-controller-manager
     - system:node
+    - system:k3s-supervisor
 
   # Log metadata about writing stuff
   - level: Metadata
