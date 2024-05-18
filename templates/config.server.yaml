@@ -34,9 +34,6 @@ kubelet-arg:
   - streaming-connection-idle-timeout=5m
   - make-iptables-util-chains=true
   - containerd=/run/k3s/containerd/containerd.sock
-etcd-arg:
-  # double the default
-  - quota-backend-bytes=8589934592
 
 tls-san: {{ k3s_tls_san }}
 node-label: {{ k3s_labels }}
