@@ -42,3 +42,12 @@
     name: k3s{% if k3s_role == 'agent' %}-agent{% endif %}.service
     state: started
     enabled: true
+
+# TODO: https://kubernetes.io/docs/concepts/architecture/garbage-collection/#image-maximum-age-gc
+- name: add k3s image prune cronjob
+  ansible.builtin.cron:
+    user: root
+    name: k3s image prune
+    job: /usr/local/bin/k3s crictl rmi --prune
+    minute: 0
+    hour: 12
