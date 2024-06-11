@@ -45,4 +45,4 @@ k3s_gateway_api_version: "1.0.0"
 
 k3s_cilium_version: "1.15.5"
 
-k3s_prometheus_operator_version: "0.73.2"
+k3s_prometheus_operator_version: "0.74.0"
