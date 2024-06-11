@@ -16,5 +16,7 @@ galaxy_info:
     - name: Ubuntu
       versions:
         - jammy
+        - mantic
+        - noble
 
 dependencies: []
