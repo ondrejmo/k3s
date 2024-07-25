@@ -49,5 +49,4 @@
     user: root
     name: k3s image prune
     job: /usr/local/bin/k3s crictl rmi --prune
-    minute: 0
-    hour: 12
+    special_time: weekly
