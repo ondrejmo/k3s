@@ -1,5 +1,33 @@
 ---
 
+- name: install dependencies
+  ansible.builtin.apt:
+    state: present
+    name:
+      # https://longhorn.io/docs/1.1.2/deploy/install/#installation-requirements 
+      - open-iscsi
+      - nfs-common
+      - bash
+      - curl
+      - util-linux # findmnt, lsblk, blkid
+      - grep
+      - mawk
+      # cillium (DISCLAIMER: bash is already present, used only as dummy value instead of empty string)
+      - "{% if ansible_distribution == 'Ubuntu' and ansible_architecture != 'x86_64' %}linux-modules-extra-raspi{% else %}bash{% endif %}"
+
+# longhorn (NFSv4) doesn't need it to listen
+- name: stop and disable rpcbind
+  ansible.builtin.systemd:
+    name: rpcbind.service
+    state: stopped
+    enabled: false
+
+- name: stop and disable rpcbind.socket
+  ansible.builtin.systemd:
+    name: rpcbind.socket
+    state: stopped
+    enabled: false
+
 - name: add audit policy
   ansible.builtin.copy:
     src: audit.yaml
@@ -30,10 +58,16 @@
   notify:
     - restart k3s
 
+- name: mkdir /var/lib/rancher/k3s/server/manifests/crds
+  ansible.builtin.file:
+    path: /var/lib/rancher/k3s/server/manifests/crds
+    state: directory
+    mode: 0700
+
 - name: add crds
   ansible.builtin.get_url:
     url: "{{ item.url }}"
-    dest: "/var/lib/rancher/k3s/server/manifests/{{ item.name }}"
+    dest: "/var/lib/rancher/k3s/server/manifests/crds/{{ item.name }}"
     mode: 0600
     owner: root
     group: root
@@ -69,7 +103,7 @@
 
 - name: add manifests
   ansible.builtin.template:
-    src: "{{ item }}"
+    src: "manifests/{{ item }}"
     dest: "/var/lib/rancher/k3s/server/manifests/{{ item }}"
     mode: 0600
     owner: root
@@ -77,7 +111,11 @@
   when:
     - k3s_role == 'server'
   loop:
-    - cilium.yaml
+    - defaults--cilium-secrets.yaml
+    - defaults--default.yaml
+    - defaults--kube-node-lease.yaml
+    - defaults--kube-public.yaml
+    - defaults--kube-system.yaml
     - persistentvolumes.yaml
   notify:
     - restart k3s

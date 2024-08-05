@@ -1,0 +1,46 @@
+---
+
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: default
+  namespace: default
+
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: MiddlewareTCP
+metadata:
+  name: kubernetes-whitelist
+  namespace: default
+
+spec:
+  ipWhiteList:
+    sourceRange: {{ k3s_api.whitelist }}
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: kubernetes
+  namespace: default
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: {% for host in k3s_api.hosts %} HostSNI(`{{ host }}`){{ " || " if not loop.last else "\n" }}{% endfor %}
+      services:
+        - name: kubernetes
+          port: 443
+      middlewares:
+        - name: kubernetes-whitelist
+
+  tls:
+    passthrough: true 

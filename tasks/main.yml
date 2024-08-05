@@ -22,8 +22,6 @@
 - ansible.builtin.import_tasks: install.yml
   when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s_version.split('+')[0], '<')
 
-- ansible.builtin.import_tasks: dependencies.yml
-
 - ansible.builtin.import_tasks: configuration.yml
 
 # https://rancher.com/docs/k3s/latest/en/installation/private-registry/

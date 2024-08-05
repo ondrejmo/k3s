@@ -35,6 +35,6 @@ kubelet-arg:
   - make-iptables-util-chains=true
   - containerd=/run/k3s/containerd/containerd.sock
 
-tls-san: {{ k3s_tls_san }}
+tls-san: {{ k3s_api.hosts }}
 node-label: {{ k3s_labels }}
 node-taint: {{ k3s_taints }}

@@ -1,6 +1,6 @@
 ---
 
-k3s_version: 1.29.5+k3s1
+k3s_version: 1.29.7+k3s1
 k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
@@ -20,19 +20,23 @@ k3s_pvs: []
 #   size: 256GiB
 #   path: /mnt/disk0/public/
 
-k3s_tls_san: []
-
 k3s_labels: []
 
 k3s_taints: []
+
+k3s_api:
+  hosts:
+    - kube.home.arpa
+  whitelist:
+    - 192.168.0.0/16
 
 k3s_registries:
   mirrors:
     docker.io:
       endpoint:
-        - https://mycustomreg.com:5000
+        - https://registry.home.arpa:5000
   configs:
-    "mycustomreg:5000":
+    "registry.home.arpa:5000":
       auth:
         username: xxxxxx # this is the registry username
         password: xxxxxx # this is the registry password
