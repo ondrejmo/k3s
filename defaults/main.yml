@@ -1,6 +1,6 @@
 ---
 
-k3s_version: 1.29.7+k3s1
+k3s_version: 1.30.4+k3s1
 k3s_role: "server"
 k3s_host: "{{ ansible_host }}"
 
@@ -47,6 +47,6 @@ k3s_registries:
 
 k3s_gateway_api_version: "1.1.0"
 
-k3s_cilium_version: "1.16.0"
+k3s_cilium_version: "1.16.1"
 
-k3s_prometheus_operator_version: "0.75.2"
+k3s_prometheus_operator_version: "0.76.0"
