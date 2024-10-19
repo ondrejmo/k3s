@@ -6,6 +6,12 @@
     state: restarted
     daemon_reload: true
 
+- name: apply sysctl
+  ansible.builtin.systemd:
+    name: systemd-sysctl.service
+    state: restarted
+    daemon_reload: true
+
 - name: reboot
   ansible.builtin.reboot:
     reboot_timeout: 120

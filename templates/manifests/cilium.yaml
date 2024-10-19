@@ -1,0 +1,291 @@
+---
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cilium
+  namespace: kube-system
+
+spec:
+  chart: https://{{ k3s_host }}:6443/static/charts/cilium-{{ k3s_components.cilium }}.tgz
+  targetNamespace: kube-system
+  bootstrap: true
+  # https://github.com/cilium/cilium/blob/v1.16.1/install/kubernetes/cilium/values.yaml
+  valuesContent: |-
+    k8sServiceHost: 127.0.0.1
+    k8sServicePort: 6444
+    l7Proxy: true
+    rollOutCiliumPods: true
+    localRedirectPolicy: true
+    kubeProxyReplacement: true
+    policyAuditMode: false
+    policyEnforcementMode: default
+    routingMode: tunnel
+    tunnelProtocol: geneve
+    loadbalancer:
+      mode: dsr
+      dsrDispatch: geneve
+    encryption:
+      enabled: true
+      type: wireguard
+      nodeEncryption: true
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        trustCRDsExist: true
+    operator:
+      replicas: 1
+      rollOutPods: true
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "true"
+        namespace: monitoring-system
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "true"
+      namespace: monitoring-system
+    hubble:
+      enabled: true
+      export:
+        dynamic:
+          enabled: true
+          config:
+            configMapName: cilium-export-config
+            createConfigMap: false
+      metrics:
+        enabled:
+          - dns
+          - drop
+          - flow
+          - flows-to-world
+          - httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction
+          - icmp
+          - port-distribution
+          - tcp
+        enableOpenMetrics: true
+        serviceMonitor:
+          enabled: true
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          labelValue: "true"
+          namespace: monitoring-system
+      dropEventEmitter:
+        enabled: true
+        # --- Event types
+        # ref: https://docs.cilium.io/en/stable/_api/v1/flow/README/#flow-CiliumEventType
+        # --- Minimum time between emitting same events.
+        interval: 5m
+        # Drop reasons to emit events for.
+        # ref: https://docs.cilium.io/en/stable/_api/v1/flow/README/#dropreason
+        reasons:
+          - auth_required
+          - policy_denied
+      relay:
+        enabled: true
+        rollOutPods: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+      ui:
+        enabled: true
+        rollOutPods: true
+        frontend:
+          server:
+            ipv6:
+              enabled: false
+    ipam:
+      operator:
+        clusterPoolIPv4PodCIDRList: [ 10.42.0.0/16 ]
+    l2announcements:
+      enabled: true
+    # DISCLAIMER: this is currently implemented exclusively by Traefik
+    gatewayAPI:
+      enabled: false
+    egressGateway:
+      enabled: false
+    bandwidthManager:
+      enabled: true
+    hostFirewall:
+      enabled: true
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cilium
+  namespace: kube-system
+
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: cilium
+  policyTypes:
+    - Ingress
+  ingress:
+    - {}
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hubble
+  namespace: kube-system
+
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hubble-ui
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 80
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hubble-auth
+  namespace: kube-system
+
+type: kubernetes.io/basic-auth
+stringData:
+  username: "{{ k3s_hubble.user }}"
+  password: "{{ k3s_hubble.pass }}"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cilium-export-config
+  namespace: kube-system
+
+data:
+  flowlogs.yaml: |
+    flowlogs:
+      - name: all
+        fieldMask: []
+        includeFilters:
+          verdict:
+            - verdict: VERDICT_UNKNOWN
+            - verdict: DROPPED
+            - verdict: ERROR
+            - verdict: AUDIT
+          # VERDICT_UNKNOWN = 0;
+          # FORWARDED = 1;
+          # DROPPED = 2;
+          # ERROR = 3;
+          # AUDIT = 4;
+          # REDIRECTED = 5;
+        excludeFilters: []
+        filePath: "/var/run/cilium/hubble/events.log"
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hubble
+  namespace: kube-system
+
+spec:
+  commonName: {{ k3s_hubble.host }}
+  dnsNames:
+    - {{ k3s_hubble.host }}
+  secretName: hubble-certificate
+  issuerRef:
+    name: {{ "trusted-ca" if k3s_ca.crt != "" and k3s_ca.key != "" else "selfsigned-ca" }}
+    kind: ClusterIssuer
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: hubble-auth
+  namespace: kube-system
+
+spec:
+  basicAuth:
+    secret: hubble-auth
+    realm: Hubble
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hubble
+  namespace: kube-system
+  annotations:
+    external-dns.alpha.kubernetes.io/target: "{{ k3s_loadbalancer.pools[0].start }}"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+
+spec:
+  entryPoints:
+    - websecure
+
+  routes:
+    - match: Host(`{{ k3s_hubble.host }}`)
+      kind: Rule
+      services:
+        - name: hubble-ui
+          port: 80
+      middlewares:
+        - name: hubble-auth
+
+  tls:
+    secretName: hubble-certificate
+
+{% for pool in k3s_loadbalancer.pools %}
+---
+
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: "{{ pool.name }}"
+
+spec:
+  blocks:
+    - start: "{{ pool.start }}"
+      stop: "{{ pool.stop }}"
+
+{% endfor %}
+{% for ad in k3s_loadbalancer.ads %}
+---
+
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: "{{ ad.host }}-{{ ad.iface }}"
+
+spec:
+  loadBalancerIPs: true
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: "{{ ad.host }}"
+  interfaces:
+    - "{{ ad.iface }}"
+
+{% endfor %}

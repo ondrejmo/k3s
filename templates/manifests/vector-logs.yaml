@@ -1,0 +1,199 @@
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-logs-config
+  namespace: monitoring-system
+
+data:
+  agent.yml: |
+    ---
+
+    data_dir: /var/lib/vector
+
+    api:
+      enabled: false
+
+    sources:
+      kube:
+        type: kubernetes_logs
+
+      file:
+        type: file
+        ignore_older_secs: 600
+        read_from: beginning
+        include:
+          - /var/log/osquery/osqueryd.results.log
+          - /var/log/auth.log
+          - /var/log/dpkg.log
+          - /var/log/hass.log
+          - /var/log/jellyfin/*
+          - /var/log/kern.log
+          - /var/lib/rancher/k3s/server/logs/audit.log
+          - /var/lib/rancher/k3s/agent/containerd/containerd.log
+          - /var/log/smartctl.json
+          - /var/log/syslog
+          - /var/run/cilium/hubble/events.log
+
+    transforms:
+      label_logs:
+        type: remap
+        inputs: [ file ]
+        source: |-
+          .tag = "file"
+          .host = get_env_var!("VECTOR_SELF_NODE_NAME")
+
+      label_kube:
+        type: remap
+        inputs: [ kube ]
+        source: |-
+          .tag = "kube"
+          .cluster = "{{ k3s_name }}"
+
+    sinks:
+{% for item in k3s_log_targets %}
+      {{ item.host | replace(".", "__") }}:
+        type: vector
+        inputs: [ label_logs, label_kube ]
+        address: {{ item.host }}:{{ item.port }}
+        compression: true
+{% if item.tls %}
+        tls:
+          enabled: true
+          ca_file: /tls/ca-certificates.crt
+{% endif %}
+{% endfor %}
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vector-logs
+  namespace: monitoring-system
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vector-logs
+  namespace: monitoring-system
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - nodes
+      - pods
+    verbs:
+      - list
+      - watch
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vector-logs
+  namespace: monitoring-system
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vector-logs
+subjects:
+  - kind: ServiceAccount
+    name: vector-logs
+    namespace: monitoring-system
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vector-logs
+  namespace: monitoring-system
+
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vector-logs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vector-logs
+        # DISCLAIMER: to prevent accidental feedback loop
+        vector.dev/exclude: "true"
+    spec:
+      serviceAccount: vector-logs
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: vector
+          image: timberio/vector:{{ k3s_components.vector }}-debian
+          args:
+            - -w
+            - --config-dir
+            - /etc/vector/
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+          env:
+            - name: VECTOR_SELF_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: VECTOR_SELF_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VECTOR_SELF_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vector
+            - name: ca
+              mountPath: /tls
+            - name: buffer
+              mountPath: /var/lib/vector
+            - name: var-log
+              mountPath: /var/log
+              readOnly: true
+            - name: var-audit-log
+              mountPath: /var/lib/rancher/k3s/server/logs
+              readOnly: true
+            - name: var-cilium-log
+              mountPath: /var/run/cilium/hubble
+              readOnly: true
+            - name: var-containerd-log
+              mountPath: /var/lib/rancher/k3s/agent/containerd
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: vector-logs-config
+        - name: ca
+          configMap:
+            name: trusted-ca-bundle
+        - name: buffer
+          hostPath:
+            path: /var/lib/vector
+            type: DirectoryOrCreate
+        - name: var-log
+          hostPath:
+            path: /var/log/
+        - name: var-audit-log
+          hostPath:
+            path: /var/lib/rancher/k3s/server/logs
+        - name: var-cilium-log
+          hostPath:
+            path: /var/run/cilium/hubble
+        - name: var-containerd-log
+          hostPath:
+            path: /var/lib/rancher/k3s/agent/containerd/containerd.log
+            type: FileOrCreate

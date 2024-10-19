@@ -1,0 +1,268 @@
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-dns
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: external-dns-mikrotik
+  namespace: external-dns
+
+stringData:
+  MIKROTIK_HOST: "{{ k3s_dns.host }}"
+  MIKROTIK_USERNAME: "{{ k3s_dns.user }}"
+  MIKROTIK_PASSWORD: "{{ k3s_dns.pass }}"
+  MIKROTIK_SKIP_TLS_VERIFY: "false"
+  MIKROTIK_PORT: "443"
+  SERVER_HOST: "0.0.0.0"
+  LOG_FORMAT: json
+  LOG_LEVEL: info
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: external-dns
+  namespace: external-dns
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: external-dns
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - traefik.io
+    resources:
+      - ingressroutes
+      - ingressroutetcps
+      - ingressrouteudps
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - gateways
+      - httproutes
+      - grpcroutes
+    verbs:
+      - get
+      - watch
+      - list
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns-viewer
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+  - kind: ServiceAccount
+    name: external-dns
+    namespace: external-dns
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-dns
+  namespace: external-dns
+  labels:
+    app.kubernetes.io/name: external-dns
+
+spec:
+  selector:
+    app.kubernetes.io/name: external-dns
+  ports:
+    - name: http
+      port: 7979
+    - name: http-webhook
+      port: 8888
+    - name: http-wh-metrics
+      port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: external-dns
+
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: external-dns
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: external-dns
+    spec:
+      serviceAccountName: external-dns
+      securityContext:
+        fsGroup: 65534
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: external-dns
+          image: registry.k8s.io/external-dns/external-dns:v{{ k3s_components.external_dns }}
+          args:
+            - --log-level=info
+            - --log-format=text
+            - --interval=15s
+            # --source=node
+            - --source=ingress
+            - --source=service
+            - --source=traefik-proxy
+            - --source=gateway-httproute
+            - --source=gateway-grpcroute
+            - --policy=sync
+            - --registry=txt
+            - --txt-owner-id={{ k3s_name }}
+            - --domain-filter=home.arpa
+            - --provider=webhook
+            - --traefik-disable-legacy
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          ports:
+            - name: http
+              containerPort: 7979
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+        - name: webhook
+          image: ghcr.io/mirceanton/external-dns-provider-mikrotik:v{{ k3s_components.external_dns_mikrotik }}
+          envFrom:
+            - secretRef:
+                name: external-dns-mikrotik
+          ports:
+            - name: http-webhook
+              containerPort: 8888
+            - name: http-wh-metrics
+              containerPort: 8080
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: http-wh-metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /readyz
+              port: http-wh-metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: ca
+              mountPath: /etc/ssl/certs
+      volumes:
+        - name: ca
+          configMap:
+            name: trusted-ca-bundle
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: external-dns
+  namespace: external-dns
+
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: external-dns
+  endpoints:
+    - port: http
+    - port: http-wh-metrics

@@ -1,0 +1,187 @@
+{% for item in k3s_metric_targets %}
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prometheus-agent-remotewrite-{{ item.url | urlsplit("hostname") | replace(".", "-") }}
+  namespace: monitoring-system
+
+stringData:
+  user: "{{ item.user }}"
+  pass: "{{ item.pass }}"
+
+{% endfor %}
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-agent
+  namespace: monitoring-system
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-agent
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/metrics
+    verbs:
+      - get
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-agent
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-agent
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-agent
+    namespace: monitoring-system
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-agent
+  namespace: monitoring-system
+  labels:
+    app.kubernetes.io/name: prometheus-agent
+
+spec:
+  selector:
+    app.kubernetes.io/name: prometheus-agent
+  ports:
+    - name: http
+      port: 9090
+    - name: http-reloader
+      port: 8081
+
+---
+
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: prometheus-agent
+  namespace: monitoring-system
+
+spec:
+  version: v{{ k3s_components.prometheus }}
+  replicas: 1
+  logLevel: info
+  logFormat: json
+  scrapeInterval: 30s
+
+  serviceAccountName: prometheus-agent
+
+  enableFeatures:
+    - exemplar-storage
+
+  remoteWrite:
+{% for item in k3s_metric_targets %}
+    - url: {{ item.url }}
+      sendExemplars: true
+      basicAuth:
+          username:
+            name: prometheus-agent-remotewrite-{{ item.url | urlsplit("hostname") | replace(".", "-") }}
+            key: user
+          password:
+            name: prometheus-agent-remotewrite-{{ item.url | urlsplit("hostname") | replace(".", "-") }}
+            key: pass
+      tlsConfig:
+        ca:
+          configMap:
+            name: trusted-ca-bundle
+            key: ca-certificates.crt
+      writeRelabelConfigs:
+        - action: replace
+          targetLabel: cluster
+          replacement: {{ k3s_name }}
+{% endfor %}
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi
+
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchExpressions:
+              - {key: app.kubernetes.io/name, operator: In, values: [prometheus-agent]}
+              - {key: prometheus, operator: In, values: [prometheus-agent]}
+
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  probeNamespaceSelector: {}
+  probeSelector: {}
+  scrapeConfigNamespaceSelector: {}
+  scrapeConfigSelector: {}
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-agent
+  namespace: monitoring-system
+
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-agent
+  endpoints:
+    - port: http
+    # port: http-reloader

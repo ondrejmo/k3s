@@ -1,52 +1,114 @@
 ---
 
-k3s_version: 1.30.4+k3s1
+# Name of the cluster (must be the same accross all "servers"), use for metric and log labels.
+k3s_name: "wolfpack"
+
+# Role of the node, either "agent" or "server"
 k3s_role: "server"
+
+# Bind host to for k3s
 k3s_host: "{{ ansible_host }}"
 
+# To join the node to an existing cluster
 k3s_registration:
   url: ""
   token: "" # /var/lib/rancher/k3s/server/node-token
 
-k3s_pvs: []
-# - name: data10
-#   type: nfs
-#   host: fenrir2.home.arpa
-#   size: 2048GiB
-#   path: /mnt/disk2/public/
-# - name: data02
-#   type: ext4
-#   host: fenrir5
-#   size: 256GiB
-#   path: /mnt/disk0/public/
+# Storage to be used by local-path-provisioner and longhorn
+k3s_storage:
+  local: /mnt/disk/public
+  longhorn: /mnt/disk/private
 
+# NFS share used as backup target for "longhorn" StorageClass
+k3s_backup: nfs://nas.home.arpa:/mnt/disk/public
+
+# Labels to be applied to node
 k3s_labels: []
 
+# Taints to be applied to node
 k3s_taints: []
 
+# Domain used for Kubernetes API with whitelisted client IP subnets
 k3s_api:
-  hosts:
-    - kube.home.arpa
+  host: kube.home.arpa
   whitelist:
     - 192.168.0.0/16
 
+# Certifications authority that will be used to issue certs and include in TrustBundle (both cert and key as a multiline string)
+k3s_ca:
+  crt: ""
+  key: ""
+
+# Host and credentials for RouterOS device with a DNS server
+k3s_dns:
+  host: "192.168.1.1"
+  user: admin
+  pass: admin
+
+# Domain and authentication for Hubble web interface
+k3s_hubble:
+  host: hubble.home.arpa
+  user: admin
+  pass: admin
+
+# Domain and authentication for Longhorn web interface
+k3s_longhorn:
+  host: longhorn.home.arpa
+  user: admin
+  pass: admin
+
+# Vector.dev protocol
+k3s_log_targets:
+  - host: logs.home.arpa
+    port: "6000"
+    tls: true
+
+# Prometheus remote-write
+k3s_metric_targets:
+  - url: https://prometheus.home.arpa/api/v1/write
+    user: admin
+    pass: admin
+
+# L2 annouced floating ips
+k3s_loadbalancer:
+  pools:
+    - name: default
+      start: "172.16.4.1"
+      stop: "172.16.4.127"
+  ads:
+    - host: "{{ inventory_hostname }}"
+      iface: "{{ ansible_default_ipv4.interface }}"
+
+# Container registries that won't require imagePullSecrets
 k3s_registries:
   mirrors:
-    docker.io:
+    registry.home.arpa:
       endpoint:
-        - https://registry.home.arpa:5000
+        - https://registry.home.arpa
   configs:
-    "registry.home.arpa:5000":
+    "registry.home.arpa":
       auth:
-        username: xxxxxx # this is the registry username
-        password: xxxxxx # this is the registry password
+        username: admin
+        password: admin
       tls:
-        cert_file: # path to the cert file used in the registry
-        key_file:  # path to the key file used in the registry
-        ca_file:   # path to the ca file used in the registry
+        ca_file: /etc/ssl/certs/ca-certificates.crt
 
-k3s_gateway_api_version: "1.1.0"
-
-k3s_cilium_version: "1.16.1"
-
-k3s_prometheus_operator_version: "0.76.0"
+# Versions of all components
+k3s_components:
+  cert_manager: "1.16.1"
+  cilium: "1.16.3"
+  external_dns: "0.15.0"
+  external_dns_mikrotik: "0.2.5"
+  external_snapshotter: "6.3.2" # mandated by longhorn
+  intel_gpu: "0.30.0"
+  k3s: "1.30.5+k3s1"
+  kube_state_metrics: "2.13.0"
+  local_path_provisioner: "0.0.30"
+  longhorn: "1.7.2"
+  node_exporter: "1.8.2"
+  prometheus: "2.54.1"
+  prometheus_operator: "0.77.1"
+  traefik: "32.1.1" # chart version
+  trivy_operator: "0.24.1" # chart version
+  trust_manager: "0.12.0"
+  vector: "0.41.1"

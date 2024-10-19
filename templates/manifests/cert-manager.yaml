@@ -1,0 +1,207 @@
+---
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cert-manager
+  namespace: kube-system
+
+spec:
+  chart: https://%{KUBERNETES_API}%/static/charts/cert-manager-{{ k3s_components.cert_manager }}.tgz
+  targetNamespace: cert-manager
+  createNamespace: true
+  # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+  valuesContent: |-
+    fullnameOverride: cert-manager
+    enableCertificateOwnerRef: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+    startupapicheck:
+      enabled: false
+    crds:
+      enabled: true
+    webhook:
+      replicaCount: 1
+    prometheus:
+      enabled: true
+      servicemonitor:
+        enabled: true
+
+---
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: trust-manager
+  namespace: kube-system
+
+spec:
+  chart: https://%{KUBERNETES_API}%/static/charts/trust-manager-{{ k3s_components.trust_manager }}.tgz
+  targetNamespace: cert-manager
+  createNamespace: true
+  # https://github.com/cert-manager/trust-manager/blob/main/deploy/charts/trust-manager/values.yaml
+  valuesContent: |-
+    app:
+      metrics:
+        service:
+          enabled: true
+          servicemonitor:
+            enabled: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+    crds:
+      enabled: true
+    # secretTargets:
+    #   enabled: true
+    #   authorizedSecrets:
+    #     - ca-certificates
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+
+spec:
+  policyTypes:
+    - Ingress
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 9402
+          protocol: TCP
+        - port: 9403
+          protocol: TCP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+
+spec:
+  policyTypes:
+    - Ingress
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 9402
+          protocol: TCP
+        - port: 9403
+          protocol: TCP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cert-manager-webhook
+  namespace: cert-manager
+
+spec:
+  policyTypes:
+    - Ingress
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: webhook
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 6080
+          protocol: TCP
+        - port: 10250
+          protocol: TCP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: trust-manager
+  namespace: cert-manager
+
+spec:
+  policyTypes:
+    - Ingress
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: trust-manager
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 6443
+          protocol: TCP
+        - port: 9402
+          protocol: TCP
+
+{% if k3s_ca.crt != "" and k3s_ca.key != "" %}
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: trusted-ca
+  namespace: cert-manager
+
+stringData:
+  tls.crt: |
+    {{ k3s_ca.crt | indent(4) }}
+  tls.key: |
+    {{ k3s_ca.key | indent(4) }}
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: trusted-ca
+
+spec:
+  ca:
+    secretName: trusted-ca
+
+{% endif %}
+---
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-ca
+
+spec:
+  selfSigned: {}
+
+---
+
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: trusted-ca-bundle
+
+spec:
+  sources:
+    - useDefaultCAs: true
+    - secret:
+        name: {{ "trusted-ca" if k3s_ca.crt != "" and k3s_ca.key != "" else "selfsigned-ca" }}
+        key: tls.crt
+  target:
+    configMap:
+      key: ca-certificates.crt

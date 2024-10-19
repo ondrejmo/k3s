@@ -13,10 +13,11 @@ flannel-backend: none
 disable-network-policy: true
 disable-kube-proxy: true
 etcd-snapshot-retention: 20
-embedded-registry: true
+embedded-registry: false # nice feature, but my current single-node mode of operation does not benefit from it
 disable:
-  - servicelb
-  - local-storage
+  - traefik
+  - servicelb # overriden
+  - local-storage # overriden
 
 kube-apiserver-arg:
   - admission-control-config-file=/var/lib/rancher/k3s/server/psa.yaml
@@ -25,7 +26,7 @@ kube-apiserver-arg:
   - audit-log-maxage=30
   - audit-log-maxbackup=10
   - audit-log-maxsize=100
-  - request-timeout=300s
+  - request-timeout=60s
   - service-account-lookup=true
 kube-controller-manager-arg:
   - terminated-pod-gc-threshold=10
@@ -34,7 +35,9 @@ kubelet-arg:
   - streaming-connection-idle-timeout=5m
   - make-iptables-util-chains=true
   - containerd=/run/k3s/containerd/containerd.sock
+  - tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
 
-tls-san: {{ k3s_api.hosts }}
+tls-san:
+  - {{ k3s_api.host }}
 node-label: {{ k3s_labels }}
 node-taint: {{ k3s_taints }}

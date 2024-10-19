@@ -10,6 +10,7 @@
   loop:
     - /var/lib/rancher/k3s/server/logs
     - /var/lib/rancher/k3s/server/manifests
+    - /var/lib/rancher/k3s/server/manifests/metrics-server
     - /var/lib/rancher/k3s/server/static/charts
     - /etc/rancher/k3s
 
@@ -19,21 +20,12 @@
   failed_when: false
   changed_when: false
 
-- ansible.builtin.import_tasks: install.yml
-  when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s_version.split('+')[0], '<')
+- name: run k3s-install.sh
+  ansible.builtin.import_tasks: install.yml
+  when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s_components.k3s.split('+')[0], '<')
 
-- ansible.builtin.import_tasks: configuration.yml
-
-# https://rancher.com/docs/k3s/latest/en/installation/private-registry/
-- name: configure private registries
-  ansible.builtin.template:
-    src: registries.yaml
-    dest: /etc/rancher/k3s/registries.yaml
-    mode: 0600
-    owner: root
-    group: root
-  notify:
-    - restart k3s
+- name: add additional configuration
+  ansible.builtin.import_tasks: configuration.yml
 
 - name: start k3s
   ansible.builtin.systemd:
@@ -41,7 +33,7 @@
     state: started
     enabled: true
 
-# TODO: https://kubernetes.io/docs/concepts/architecture/garbage-collection/#image-maximum-age-gc
+# DISCLAIMER: it's not the same as https://kubernetes.io/docs/concepts/architecture/garbage-collection/#image-maximum-age-gc, because it does not reset with kubelet restart
 - name: add k3s image prune cronjob
   ansible.builtin.cron:
     user: root

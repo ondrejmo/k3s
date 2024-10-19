@@ -1,0 +1,173 @@
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vector-events
+  namespace: monitoring-system
+  annotations:
+    kubernetes.io/service-account.name: vector-events
+
+type: kubernetes.io/service-account-token
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-events-config
+  namespace: monitoring-system
+
+data:
+  agent.yml: |
+    ---
+
+    data_dir: /var/lib/vector
+
+    api:
+      enabled: false
+
+    sources:
+      events:
+        type: http_client
+        endpoint: https://kubernetes.default.svc:443/api/v1/events
+        scrape_interval_secs: 15
+        decoding:
+          codec: json
+        auth:
+          strategy: bearer
+          token: "${KUBE_TOKEN}"
+        tls:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        headers:
+          Accept:
+            - application/json
+
+    transforms:
+      label_events:
+        type: remap
+        inputs: [ events ]
+        source: |-
+          .tag = "events"
+          .cluster = "{{ k3s_name }}"
+
+      dedupe_events:
+        type: dedupe
+        inputs: [ label_events ]
+        fields:
+          match:
+            - metadata.uid
+
+    sinks:
+{% for item in k3s_log_targets %}
+      {{ item.host | replace(".", "__") }}:
+        type: vector
+        inputs: [ dedupe_events ]
+        address: {{ item.host }}:{{ item.port }}
+        compression: true
+{% if item.tls %}
+        tls:
+          enabled: true
+          ca_file: /tls/ca-certificates.crt
+{% endif %}
+{% endfor %}
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vector-events
+  namespace: monitoring-system
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vector-events
+
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vector-events
+
+subjects:
+  - kind: ServiceAccount
+    name: vector-events
+    namespace: monitoring-system
+roleRef:
+  kind: ClusterRole
+  name: vector-events
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vector-events
+  namespace: monitoring-system
+
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vector-events
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vector-events
+    spec:
+      serviceAccount: vector-events
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: vector
+          image: timberio/vector:{{ k3s_components.vector }}-debian
+          args:
+            - -w
+            - --config-dir
+            - /etc/vector/
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            runAsGroup: 2000
+            runAsUser: 2000
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+          env:
+            - name: KUBE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vector-events
+                  key: token
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vector
+            - name: ca
+              mountPath: /tls
+      volumes:
+        - name: config
+          configMap:
+            name: vector-events-config
+        - name: ca
+          configMap:
+            name: trusted-ca-bundle

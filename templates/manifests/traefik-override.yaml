@@ -1,0 +1,145 @@
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traefik
+  namespace: kube-system
+
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: traefik
+  policyTypes:
+    - Ingress
+  ingress:
+    - {}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-middlewares
+  namespace: kube-system
+
+data:
+  middlewares.yaml: |
+    http:
+      middlewares:
+        hardening:
+          headers:
+            customFrameOptionsValue: "SAMEORIGIN"
+            customResponseHeaders:
+              Content-Security-Policy: "frame-ancestors 'self' *.{{ ansible_fqdn.split(".")[1:] | join(".") }}"
+              X-Robots-Tag: "none"
+              X-powered-By: ""
+              Server: ""
+            accessControlAllowOriginList:
+              - "*"
+            browserXssFilter: true
+            contentTypeNosniff: true
+            frameDeny: true
+            stsPreload: true
+            stsSeconds: 63072000
+            stsIncludeSubdomains: true
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  name: default
+  namespace: kube-system
+
+spec:
+  minVersion: VersionTLS13
+
+---
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: traefik
+  namespace: kube-system
+
+spec:
+  chart: https://%{KUBERNETES_API}%/static/charts/traefik-{{ k3s_components.traefik }}.tgz
+  targetNamespace: kube-system
+  # https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+  valuesContent: |-
+    globalArguments: []
+    priorityClassName: "system-cluster-critical"
+    providers:
+      kubernetesIngress:
+        publishedService:
+          enabled: true
+      kubernetesCRD:
+        enabled: true
+      kubernetesGateway:
+        enabled: true
+    tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+    additionalArguments:
+      # backend tls is not verified (my pods have some trust issues)
+      - --serversTransport.insecureSkipVerify=true
+      # default redirect (priority 1 ~ easily overuled)
+      - --entrypoints.web.http.redirections.entryPoint.to=:443
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --entrypoints.web.http.redirections.entrypoint.priority=1
+      # assign default middlewares
+      - --providers.file.filename=/config/middlewares.yml
+      - --entrypoints.websecure,default-headers@file
+    ingressRoute:
+      # no traefik dashboard
+      dashboard:
+        enabled: false
+    additionalVolumeMounts:
+      # @file middlewares are cross-namespace available
+      - name: traefik-middlewares
+        mountPath: /config
+    deployment:
+      kind: DaemonSet
+      additionalVolumes:
+        - name: traefik-middlewares
+          configMap:
+            name: traefik-middlewares
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    service:
+      spec:
+        loadBalancerIP: "{{ k3s_loadbalancer.pools[0].start }}"
+        externalTrafficPolicy: Local
+        allocateLoadBalancerNodePorts: false
+    logs:
+      general:
+        format: json
+        level: INFO
+      access:
+        enabled: true
+        format: json
+        fields:
+          general:
+            defaultmode: keep
+            names: {}
+          headers:
+            defaultmode: drop
+            names:
+                User-Agent: keep
+                Content-Type: keep
+    metrics:
+      addInternals: true
+      prometheus:
+        entryPoint: metrics
+        serviceMonitor:
+          enabled: true

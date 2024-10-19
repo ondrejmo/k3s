@@ -1,0 +1,77 @@
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: intel-gpu-plugin
+  namespace: kube-system
+
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: intel-gpu-plugin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: intel-gpu-plugin
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      initContainers:
+        - name: intel-gpu-init
+          image: intel/intel-gpu-initcontainer:{{ k3s_components.intel_gpu }}
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 5m
+              memory: 32Mi
+          volumeMounts:
+            - name: nfd-source-hooks
+              mountPath: /etc/kubernetes/node-feature-discovery/source.d/
+      containers:
+        - name: intel-gpu-plugin
+          image: intel/intel-gpu-plugin:{{ k3s_components.intel_gpu }}
+          args:
+            - -shared-dev-num=4
+            - -enable-monitoring
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 5m
+              memory: 32Mi
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - name: devfs
+              mountPath: /dev/dri
+              readOnly: true
+            - name: sysfs
+              mountPath: /sys/class/drm
+              readOnly: true
+            - name: kubeletsockets
+              mountPath: /var/lib/kubelet/device-plugins
+      volumes:
+        - name: devfs
+          hostPath:
+            path: /dev/dri
+        - name: sysfs
+          hostPath:
+            path: /sys/class/drm
+        - name: kubeletsockets
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: nfd-source-hooks
+          hostPath:
+            path: /etc/kubernetes/node-feature-discovery/source.d/
+            type: DirectoryOrCreate

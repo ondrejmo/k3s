@@ -1,0 +1,28 @@
+---
+
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: default
+
+spec:
+  description: Deny all ingress by default
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints: []
+
+---
+
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: default-prometheus-agent
+
+spec:
+  description: Allow all ingress traffic from prometheus-agent
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: monitoring-system
+            app.kubernetes.io/name: prometheus-agent

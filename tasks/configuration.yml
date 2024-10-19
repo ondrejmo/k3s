@@ -4,7 +4,7 @@
   ansible.builtin.apt:
     state: present
     name:
-      # https://longhorn.io/docs/1.1.2/deploy/install/#installation-requirements 
+      # https://longhorn.io/docs/1.1.2/deploy/install/#installation-requirements
       - open-iscsi
       - nfs-common
       - bash
@@ -12,36 +12,31 @@
       - util-linux # findmnt, lsblk, blkid
       - grep
       - mawk
-      # cillium (DISCLAIMER: bash is already present, used only as dummy value instead of empty string)
-      - "{% if ansible_distribution == 'Ubuntu' and ansible_architecture != 'x86_64' %}linux-modules-extra-raspi{% else %}bash{% endif %}"
 
 # longhorn (NFSv4) doesn't need it to listen
 - name: stop and disable rpcbind
   ansible.builtin.systemd:
-    name: rpcbind.service
+    name: "{{ item }}"
     state: stopped
     enabled: false
+  loop:
+    - rpcbind.service
+    - rpcbind.socket
 
-- name: stop and disable rpcbind.socket
-  ansible.builtin.systemd:
-    name: rpcbind.socket
-    state: stopped
-    enabled: false
-
-- name: add audit policy
-  ansible.builtin.copy:
-    src: audit.yaml
-    dest: /var/lib/rancher/k3s/server/audit.yaml
+- name: add k3s configuration
+  ansible.builtin.template:
+    src: "config.{{ k3s_role }}.yaml"
+    dest: /etc/rancher/k3s/config.yaml
     mode: 0600
     owner: root
     group: root
   notify:
     - restart k3s
 
-- name: adjust configuration
-  ansible.builtin.template:
-    src: "config.{{ k3s_role }}.yaml"
-    dest: /etc/rancher/k3s/config.yaml
+- name: add audit policy
+  ansible.builtin.copy:
+    src: audit.yaml
+    dest: /var/lib/rancher/k3s/server/audit.yaml
     mode: 0600
     owner: root
     group: root
@@ -58,50 +53,84 @@
   notify:
     - restart k3s
 
-- name: mkdir /var/lib/rancher/k3s/server/manifests/crds
-  ansible.builtin.file:
-    path: /var/lib/rancher/k3s/server/manifests/crds
-    state: directory
-    mode: 0700
+# https://rancher.com/docs/k3s/latest/en/installation/private-registry/
+- name: add private registries
+  ansible.builtin.template:
+    src: registries.yaml
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: 0600
+    owner: root
+    group: root
+  notify:
+    - restart k3s
 
-- name: add crds
+- name: add sysctl hardening
+  ansible.builtin.copy:
+    src: 90-kubelet.conf
+    dest: /etc/sysctl.d/90-kubelet.conf
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+   - apply sysctl
+
+- name: add helm charts
   ansible.builtin.get_url:
-    url: "{{ item.url }}"
-    dest: "/var/lib/rancher/k3s/server/manifests/crds/{{ item.name }}"
+    url: "{{ item.src }}"
+    dest: "/var/lib/rancher/k3s/server/static/charts/{{ item.dst }}"
     mode: 0600
     owner: root
     group: root
   changed_when: false
+  when:
+    - k3s_role == 'server'
   loop:
-    - name: prometheus-operator.yaml
-      url: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_prometheus_operator_version }}/stripped-down-crds.yaml"
-    - name: gatewayclasses.yaml
-      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml"
-    - name: gateways.yaml
-      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_gateways.yaml"
-    - name: httproutes.yaml
-      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml"
-    - name: referencegrants.yaml
-      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml"
-    - name: grpcroutes.yaml
-      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/experimental/gateway.networking.k8s.io_grpcroutes.yaml"
-    - name: tlsroutes.yaml
-      url: "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v{{ k3s_gateway_api_version }}/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml"
+    - src: "https://github.com/cilium/charts/raw/master/cilium-{{ k3s_components.cilium }}.tgz"
+      dst: "cilium-{{ k3s_components.cilium }}.tgz"
+    - src: "https://charts.jetstack.io/charts/trust-manager-v{{ k3s_components.trust_manager }}.tgz"
+      dst: "trust-manager-{{ k3s_components.trust_manager }}.tgz"
+    - src: "https://charts.jetstack.io/charts/cert-manager-v{{ k3s_components.cert_manager }}.tgz"
+      dst: "cert-manager-{{ k3s_components.cert_manager }}.tgz"
+    - src: "https://traefik.github.io/charts/traefik/traefik-{{ k3s_components.traefik }}.tgz"
+      dst: "traefik-{{ k3s_components.traefik }}.tgz"
+    - src: "https://github.com/longhorn/charts/releases/download/longhorn-{{ k3s_components.longhorn }}/longhorn-{{ k3s_components.longhorn }}.tgz"
+      dst: "longhorn-{{ k3s_components.longhorn }}.tgz"
+    - src: "https://github.com/aquasecurity/helm-charts/releases/download/trivy-operator-{{ k3s_components.trivy_operator }}/trivy-operator-{{ k3s_components.trivy_operator }}.tgz"
+      dst: "trivy-operator-{{ k3s_components.trivy_operator }}.tgz"
+
+- name: add kustomizations
+  ansible.builtin.copy:
+    dest: "/var/lib/rancher/k3s/server/manifests/{{ item.dst }}"
+    mode: 0600
+    owner: root
+    group: root
+    content: |
+      {{ item.src }}
   when:
     - k3s_role == 'server'
+  loop:
+    - src: "{{ lookup('kubernetes.core.kustomize', dir='https://github.com/kubernetes-csi/external-snapshotter/client/config/crd?ref=v' + k3s_components.external_snapshotter) }}"
+      dst: external-snapshotter-crds.yaml
+  notify:
+    - restart k3s
 
-- name: add cilium chart
+- name: add remote manifests
   ansible.builtin.get_url:
-    url: "https://github.com/cilium/charts/raw/master/cilium-{{ k3s_cilium_version }}.tgz"
-    dest: "/var/lib/rancher/k3s/server/static/charts/cilium-{{ k3s_cilium_version }}.tgz"
+    url: "{{ item.src }}"
+    dest: "/var/lib/rancher/k3s/server/manifests/{{ item.dst }}"
     mode: 0600
     owner: root
     group: root
   changed_when: false
   when:
     - k3s_role == 'server'
+  loop:
+    - src: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_components.prometheus_operator }}/stripped-down-crds.yaml"
+      dst: "prometheus-operator-crds.yaml"
+  notify:
+    - restart k3s
 
-- name: add manifests
+- name: add local manifests
   ansible.builtin.template:
     src: "manifests/{{ item }}"
     dest: "/var/lib/rancher/k3s/server/manifests/{{ item }}"
@@ -111,44 +140,26 @@
   when:
     - k3s_role == 'server'
   loop:
-    - defaults--cilium-secrets.yaml
-    - defaults--default.yaml
-    - defaults--kube-node-lease.yaml
-    - defaults--kube-public.yaml
-    - defaults--kube-system.yaml
-    - persistentvolumes.yaml
+    - cert-manager.yaml
+    - cilium.yaml
+    - ciliumclusterwidenetworkpolicy.yaml
+    - external-dns.yaml
+    - external-snapshotter.yaml
+    - intel-gpu.yaml
+    - kube-state-metrics.yaml
+    - kube-system.yaml
+    - kubernetes-api.yaml
+    - local-path-provisioner-override.yaml
+    - longhorn.yaml
+    - metrics-server/networkpolicy.yaml
+    - metrics-server/servicemonitor.yaml
+    - monitoring-system.yaml
+    - node-exporter.yaml
+    - prometheus-agent.yaml
+    - prometheus-operator.yaml
+    - traefik-override.yaml
+    - trivy-operator.yaml
+    - vector-events.yaml
+    - vector-logs.yaml
   notify:
     - restart k3s
-
-- name: harden sysctl
-  ansible.builtin.copy:
-    src: 90-kubelet.conf
-    dest: /etc/sysctl.d/90-kubelet.conf
-    mode: 0644
-    owner: root
-    group: root
-
-- name: apply hardened/hardened sysctl
-  ansible.builtin.systemd:
-    name: systemd-sysctl.service
-    state: restarted
-    daemon_reload: true
-  changed_when: false
-
-- name: patch k3s-uninstall.sh
-  ansible.posix.patch:
-    src: k3s-killall.patch
-    dest: /usr/local/bin/k3s-killall.sh
-
-- name: kubectl completion bash
-  ansible.builtin.command: kubectl completion bash
-  register: kubectl_completion
-  changed_when: false
-   
-- name: add completion
-  ansible.builtin.copy:
-    content: "{{ kubectl_completion.stdout }}"
-    dest: /etc/bash_completion.d/kubectl
-    mode: 0644
-    owner: root
-    group: root

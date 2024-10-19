@@ -10,13 +10,10 @@ galaxy_info:
 
   galaxy_tags:
     - amd64
-    - arm64
 
   platforms:
     - name: Ubuntu
       versions:
-        - jammy
-        - mantic
         - noble
 
 dependencies: []
