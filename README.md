@@ -1,8 +1,8 @@
 # Ansible role - k3s
 
-This deploys a turnkey cluster, with all components, hardening and observability required for my use-case. This role is heavily optimized for th following environment:
+This deploys a turnkey cluster, with all components, hardening and observability required by my use-case. This role is heavily optimized for the following environment:
 
-- Single-node, but multi-cluster (it should work for multinode and / or HA clusters with some manual steps)
+- Single-node, but multi-cluster (it should work for multinode and / or HA clusters with some manual steps and without my testing)
 - Intel based nodes with core i3 gen 8 (or better / newer)
 - Internal CA and local DNS, using RouterOS DNS
 - Log collector via Vector.dev protocol
