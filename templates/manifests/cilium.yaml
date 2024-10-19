@@ -79,8 +79,6 @@ spec:
           namespace: monitoring-system
       dropEventEmitter:
         enabled: true
-        # --- Event types
-        # ref: https://docs.cilium.io/en/stable/_api/v1/flow/README/#flow-CiliumEventType
         # --- Minimum time between emitting same events.
         interval: 5m
         # Drop reasons to emit events for.
@@ -182,22 +180,18 @@ metadata:
   namespace: kube-system
 
 data:
+  # https://docs.cilium.io/en/stable/observability/hubble/configuration/export/index.html#dynamic-exporter-configuration
+  # https://docs.cilium.io/en/stable/_api/v1/flow/README/#flow-CiliumEventType
   flowlogs.yaml: |
-    flowlogs:
+    flowLogs:
       - name: all
         fieldMask: []
         includeFilters:
-          verdict:
-            - verdict: VERDICT_UNKNOWN
-            - verdict: DROPPED
-            - verdict: ERROR
-            - verdict: AUDIT
-          # VERDICT_UNKNOWN = 0;
-          # FORWARDED = 1;
-          # DROPPED = 2;
-          # ERROR = 3;
-          # AUDIT = 4;
-          # REDIRECTED = 5;
+          - verdict:
+              - VERDICT_UNKNOWN
+              - DROPPED
+              - ERROR
+              - AUDIT
         excludeFilters: []
         filePath: "/var/run/cilium/hubble/events.log"
 

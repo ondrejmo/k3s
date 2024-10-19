@@ -28,7 +28,6 @@ The highlights of the features are:
 ## Roadmap
 
 - [ ] add hostfirewall to cilium
-- [ ] fix cilium flowlog
 - [ ] make vector-events more extensible (and add trivy webhook)
 - [ ] add clis for in cluster components (hubble, ...)
 - [ ] release the core role that serves as baseline for k3s nodes
