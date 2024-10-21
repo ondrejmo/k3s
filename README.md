@@ -2,7 +2,7 @@
 
 This deploys a turnkey cluster, with all components, hardening and observability required by my use-case. This role is heavily optimized for the following environment:
 
-- Single-node, but multi-cluster (it should work for multinode and / or HA clusters with some manual steps and without my testing)
+- Single-node, but multi-cluster. It works for multi-node single-master as well, though without my regular testing. HA use-cases would require additional ETCD initialization step and adjustments in some / many of the components to be truly HA.
 - Intel based nodes with core i3 gen 8 (or better / newer)
 - Internal CA and local DNS, using RouterOS DNS
 - Log collector via Vector.dev protocol
