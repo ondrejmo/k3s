@@ -27,6 +27,7 @@ The highlights of the features are:
 
 ## Roadmap
 
+- [ ] add longhorn engine v2 encrypted storageclass
 - [ ] add hostfirewall to cilium
 - [ ] make vector-events more extensible (and add trivy webhook)
 - [ ] add clis for in cluster components (hubble, ...)
