@@ -19,7 +19,7 @@ k3s_storage:
   local: /mnt/disk/public
   longhorn: /mnt/disk/private
 
-# NFS share used as backup target for "longhorn" StorageClass
+# NFS share used as backup target for "longhorn" StorageClass (make sure that the directory actually exists)
 k3s_backup: nfs://nas.home.arpa:/mnt/disk/public
 
 # Labels to be applied to node
