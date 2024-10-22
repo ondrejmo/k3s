@@ -107,7 +107,7 @@ k3s_components:
   longhorn: "1.7.2"
   node_exporter: "1.8.2"
   prometheus: "2.54.1"
-  prometheus_operator: "0.77.1"
+  prometheus_operator: "0.77.2"
   traefik: "32.1.1" # chart version
   trivy_operator: "0.24.1" # chart version
   trust_manager: "0.12.0"
