@@ -149,6 +149,23 @@ roleRef:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: snapshot-controller
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: snapshot-controller
+
+spec:
+  selector:
+    app.kubernetes.io/name: snapshot-controller
+  ports:
+    - name: metrics
+      port: 8080
+
+---
+
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -179,8 +196,25 @@ spec:
         - name: snapshot-controller
           image: registry.k8s.io/sig-storage/snapshot-controller:v{{ k3s_components.external_snapshotter }}
           args:
-            - "--v=5"
-            - "--leader-election=true"
-            # Add a marker to the snapshot-controller manifests. This is needed to enable feature gates in CSI prow jobs.
-            # For example, in https://github.com/kubernetes-csi/csi-release-tools/pull/209, the snapshot-controller YAML is updated to add --prevent-volume-mode-conversion=true so that the feature can be enabled for certain e2e tests.
-            # end snapshot controller args
+            - --v=5
+            - --leader-election=true
+            - --http-endpoint=:8080
+            - --metrics-path=/metrics
+          ports:
+            - name: metrics
+              containerPort: 8080
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: snapshot-controller
+  namespace: longhorn-system
+
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: snapshot-controller
+  endpoints:
+    - port: metrics
