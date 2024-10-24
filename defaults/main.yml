@@ -1,6 +1,6 @@
 ---
 
-# Name of the cluster (must be the same accross all "servers"), use for metric and log labels.
+# Name of the cluster (must be the same accross all "servers"), used for metric and log labels.
 k3s_name: "wolfpack"
 
 # Role of the node, either "agent" or "server"
@@ -86,7 +86,7 @@ k3s_registries:
       endpoint:
         - https://registry.home.arpa
   configs:
-    "registry.home.arpa":
+    registry.home.arpa:
       auth:
         username: admin
         password: admin
