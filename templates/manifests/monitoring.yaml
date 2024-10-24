@@ -1,0 +1,8 @@
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+
+# DISCLAIMER: this is necessary so that the pre-provisioned dashboards are in the same namespace as Grafana, which is not deployed by this role to all clusters and hence not in ns/monitoring-system

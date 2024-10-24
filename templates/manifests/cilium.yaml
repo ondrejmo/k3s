@@ -45,12 +45,12 @@ spec:
         enabled: true
         label: grafana_dashboard
         labelValue: "true"
-        namespace: monitoring-system
+        namespace: monitoring
     dashboards:
       enabled: true
       label: grafana_dashboard
       labelValue: "true"
-      namespace: monitoring-system
+      namespace: monitoring
     hubble:
       enabled: true
       export:
@@ -76,7 +76,7 @@ spec:
           enabled: true
           label: grafana_dashboard
           labelValue: "true"
-          namespace: monitoring-system
+          namespace: monitoring
       dropEventEmitter:
         enabled: true
         # --- Minimum time between emitting same events.

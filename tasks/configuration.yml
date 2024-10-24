@@ -154,6 +154,7 @@
     - metrics-server/networkpolicy.yaml
     - metrics-server/servicemonitor.yaml
     - monitoring-system.yaml
+    - monitoring.yaml
     - node-exporter.yaml
     - prometheus-agent.yaml
     - prometheus-operator.yaml
