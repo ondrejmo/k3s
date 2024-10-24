@@ -106,12 +106,17 @@ spec:
       # @file middlewares are cross-namespace available
       - name: traefik-middlewares
         mountPath: /config
+      - name: ca
+        mountPath: /etc/ssl/certs/
     deployment:
       kind: DaemonSet
       additionalVolumes:
         - name: traefik-middlewares
           configMap:
             name: traefik-middlewares
+        - name: ca
+          configMap:
+            name: trusted-ca-bundle
     resources:
       requests:
         cpu: 10m
