@@ -90,9 +90,5 @@ spec:
       relabelings:
         - sourceLabels: [ __metrics_path__ ]
           targetLabel: metrics_path
-    - port: http-metrics
-      path: /metrics/slis
-      honorLabels: true
-      interval: 5s
 
 # DISCLAIMER: k3s has all kubenernetes metrics on all endpoints, it makes sense, to scrape them only once, from kubelet (https://github.com/k3s-io/k3s/issues/3619)
