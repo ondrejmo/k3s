@@ -97,6 +97,8 @@
       dst: "longhorn-{{ k3s_components.longhorn }}.tgz"
     - src: "https://github.com/aquasecurity/helm-charts/releases/download/trivy-operator-{{ k3s_components.trivy_operator }}/trivy-operator-{{ k3s_components.trivy_operator }}.tgz"
       dst: "trivy-operator-{{ k3s_components.trivy_operator }}.tgz"
+    - src: "https://kyverno.github.io/kyverno/kyverno-{{ k3s_components.kyverno }}.tgz"
+      dst: "kyverno-{{ k3s_components.kyverno }}.tgz"
 
 - name: add kustomizations
   ansible.builtin.copy:
@@ -149,6 +151,7 @@
     - kube-state-metrics.yaml
     - kube-system.yaml
     - kubernetes-api.yaml
+    - kyverno.yaml
     - local-path-provisioner-override.yaml
     - longhorn.yaml
     - metrics-server/networkpolicy.yaml

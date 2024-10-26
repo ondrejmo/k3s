@@ -1,0 +1,45 @@
+---
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: kyverno
+  namespace: kube-system
+
+spec:
+  chart: https://%{KUBERNETES_API}%/static/charts/kyverno-{{ k3s_components.kyverno }}.tgz
+  targetNamespace: kyverno-system
+  createNamespace: true
+  # https://github.com/kyverno/kyverno/blob/main/charts/kyverno/values.yaml
+  valuesContent: |-
+    fullnameOverride: kyverno
+    grafana:
+      enabled: true
+      configMapName: kyverno-dashboard
+      labels:
+        grafana_dashboard: "true"
+    # global:
+    #   caCertificates:
+    #     volume:
+    #       configMap:
+    #         name: trusted-ca-bundle
+    admissionController:
+      networkpolicy:
+        enabled: true
+      serviceMonitor:
+        enabled: true
+    backgroundController:
+      networkpolicy:
+        enabled: true
+      serviceMonitor:
+        enabled: true
+    cleanupController:
+      networkpolicy:
+        enabled: true
+      serviceMonitor:
+        enabled: true
+    reportsController:
+      networkpolicy:
+        enabled: true
+      serviceMonitor:
+        enabled: true
