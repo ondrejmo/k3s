@@ -43,6 +43,7 @@ data:
         source: |-
           .tag = "file"
           .host = get_env_var!("VECTOR_SELF_NODE_NAME")
+          .cluster = "{{ k3s_name }}"
 
       label_kube:
         type: remap
