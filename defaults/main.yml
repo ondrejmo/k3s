@@ -93,6 +93,21 @@ k3s_registries:
       tls:
         ca_file: /etc/ssl/certs/ca-certificates.crt
 
+k3s_flows:
+  # https://docs.cilium.io/en/stable/observability/hubble/configuration/export/index.html#dynamic-exporter-configuration
+  # https://docs.cilium.io/en/stable/_api/v1/flow/README/#flow-CiliumEventType
+  flowLogs:
+    - name: all
+      fieldMask: []
+      includeFilters:
+        - verdict:
+            - VERDICT_UNKNOWN
+            - DROPPED
+            - ERROR
+            - AUDIT
+      excludeFilters: []
+      filePath: "/var/run/cilium/hubble/events.log"
+
 # Versions of all components
 k3s_components:
   cert_manager: "1.16.1"

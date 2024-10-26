@@ -180,20 +180,7 @@ metadata:
   namespace: kube-system
 
 data:
-  # https://docs.cilium.io/en/stable/observability/hubble/configuration/export/index.html#dynamic-exporter-configuration
-  # https://docs.cilium.io/en/stable/_api/v1/flow/README/#flow-CiliumEventType
-  flowlogs.yaml: |
-    flowLogs:
-      - name: all
-        fieldMask: []
-        includeFilters:
-          - verdict:
-              - VERDICT_UNKNOWN
-              - DROPPED
-              - ERROR
-              - AUDIT
-        excludeFilters: []
-        filePath: "/var/run/cilium/hubble/events.log"
+  {{ k3s_flows | string | from_yaml | to_nice_yaml | indent(2) }}
 
 ---
 
