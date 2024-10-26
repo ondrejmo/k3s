@@ -22,8 +22,6 @@ data:
   agent.yml: |
     ---
 
-    data_dir: /var/lib/vector
-
     api:
       enabled: false
 
@@ -31,7 +29,7 @@ data:
       events:
         type: http_client
         endpoint: https://kubernetes.default.svc:443/api/v1/events
-        scrape_interval_secs: 15
+        scrape_interval_secs: 30
         decoding:
           codec: json
         auth:
