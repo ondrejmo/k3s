@@ -161,14 +161,21 @@ spec:
               - {key: app.kubernetes.io/name, operator: In, values: [prometheus-agent]}
               - {key: prometheus, operator: In, values: [prometheus-agent]}
 
+  # agent reads all
   podMonitorNamespaceSelector: {}
   podMonitorSelector: {}
-  probeNamespaceSelector: {}
-  probeSelector: {}
-  scrapeConfigNamespaceSelector: {}
-  scrapeConfigSelector: {}
   serviceMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
+
+  # each Prometheus reads only those in his namespace
+  scrapeConfigNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: monitoring-system
+  scrapeConfigSelector: {}
+  probeNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: monitoring-system
+  probeSelector: {}
 
 ---
 
@@ -184,4 +191,4 @@ spec:
       app.kubernetes.io/name: prometheus-agent
   endpoints:
     - port: http
-    - port: http-reloader
+    # port: http-reloader
