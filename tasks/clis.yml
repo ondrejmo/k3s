@@ -1,79 +1,66 @@
 ---
 
-- name: mkdir /tmp/cilium
+- name: "clis/{{ item.name }} - check version file"
+  ansible.builtin.stat:
+    path: "/etc/rancher/k3s/clis/{{ item.name }}.version.txt"
+  register: cli_version_file
+
+- name: "clis/{{ item.name }} - slurp old version"
+  ansible.builtin.slurp:
+    src: "/etc/rancher/k3s/clis/{{ item.name }}.version.txt"
+  register: cli_old_version
+  when: cli_version_file.stat.exists
+
+- name: "clis/{{ item.name }} - create temporary directory"
   ansible.builtin.file:
-    path: /tmp/cilium
+    path: "/tmp/{{ item.name }}"
     state: directory
     mode: 0700
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))
 
-- name: unpack cilium
+- name: "clis/{{ item.name }} - unpack archive"
   ansible.builtin.unarchive:
-    src: "https://github.com/cilium/cilium-cli/releases/download/v{{ k3s_clis.cilium }}/cilium-linux-amd64.tar.gz"
-    dest: /tmp/cilium
+    src: "{{ item.url }}"
+    dest: "/tmp/{{ item.name }}"
     remote_src: true
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))
 
-- name: copy cilium binary to $PATH
+- name: "clis/{{ item.name }} - copy binary to $PATH"
   ansible.builtin.copy:
-    src: /tmp/cilium/cilium
-    dest: /usr/local/bin/cilium
+    src: "/tmp/{{ item.name }}/{{ item.file }}"
+    dest: "/usr/local/bin/{{ item.name }}"
     mode: 0755
     owner: root
     group: root
     remote_src: true
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))
 
-- name: rm -r /tmp/cilium
+- name: "clis/{{ item.name }} - remove temporary directory"
   ansible.builtin.file:
-    path: /tmp/cilium
+    path: "/tmp/{{ item.name }}"
     state: absent
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))
 
-- name: mkdir /tmp/helm
-  ansible.builtin.file:
-    path: /tmp/helm
-    state: directory
-    mode: 0700
+- name: "clis/{{ item.name }} - get bash completion"
+  ansible.builtin.command: "{{ item.name }} completion bash"
+  register: bash_completion
+  changed_when: false
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))
 
-- name: unpack helm
-  ansible.builtin.unarchive:
-    src: "https://get.helm.sh/helm-v{{ k3s_clis.helm }}-linux-amd64.tar.gz"
-    dest: /tmp/helm
-    remote_src: true
-
-- name: copy helm binary to $PATH
+- name: "clis/{{ item.name }} - write bash completion"
   ansible.builtin.copy:
-    src: /tmp/helm/linux-amd64/helm
-    dest: /usr/local/bin/helm
-    mode: 0755
+    content: "{{ bash_completion.stdout }}"
+    dest: "/etc/bash_completion.d/{{ item.name }}"
+    mode: 0644
     owner: root
     group: root
-    remote_src: true
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))
 
-- name: rm -r /tmp/helm
-  ansible.builtin.file:
-    path: /tmp/helm
-    state: absent
-
-- name: mkdir /tmp/hubble
-  ansible.builtin.file:
-    path: /tmp/hubble
-    state: directory
-    mode: 0700
-
-- name: unpack hubble
-  ansible.builtin.unarchive:
-    src: "https://github.com/cilium/hubble/releases/download/v{{ k3s_clis.hubble }}/hubble-linux-amd64.tar.gz"
-    dest: /tmp/hubble
-    remote_src: true
-
-- name: copy hubble binary to $PATH
+- name: "clis/{{ item.name }} - write version file"
   ansible.builtin.copy:
-    src: /tmp/hubble/hubble
-    dest: /usr/local/bin/hubble
-    mode: 0755
+    dest: "/etc/rancher/k3s/clis/{{ item.name }}.version.txt"
+    content: "{{ k3s_clis[item.name] }}"
+    mode: 0644
     owner: root
     group: root
-    remote_src: true
-
-- name: rm -r /tmp/hubble
-  ansible.builtin.file:
-    path: /tmp/hubble
-    state: absent
+  when: (not cli_version_file.stat.exists) or (k3s_clis[item.name] is version(cli_old_version['content'] | b64decode | trim, ">"))

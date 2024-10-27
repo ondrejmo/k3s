@@ -12,6 +12,7 @@
     - /var/lib/rancher/k3s/server/manifests
     - /var/lib/rancher/k3s/server/manifests/metrics-server
     - /var/lib/rancher/k3s/server/static/charts
+    - /etc/rancher/k3s/clis
     - /etc/rancher/k3s
 
 - name: check k3s is installed
@@ -25,7 +26,17 @@
   when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s_components.k3s.split('+')[0], '<')
 
 - name: add clis
-  ansible.builtin.import_tasks: clis.yml
+  ansible.builtin.include_tasks: clis.yml
+  loop:
+    - name: cilium
+      url: "https://github.com/cilium/cilium-cli/releases/download/v{{ k3s_clis.cilium }}/cilium-linux-amd64.tar.gz"
+      file: cilium
+    - name: helm
+      url: "https://get.helm.sh/helm-v{{ k3s_clis.helm }}-linux-amd64.tar.gz"
+      file: linux-amd64/helm
+    - name: hubble
+      url: "https://github.com/cilium/hubble/releases/download/v{{ k3s_clis.hubble }}/hubble-linux-amd64.tar.gz"
+      file: hubble
 
 - name: add additional configuration
   ansible.builtin.import_tasks: configuration.yml
