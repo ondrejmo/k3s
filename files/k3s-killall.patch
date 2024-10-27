@@ -18,3 +18,6 @@
 -ip6tables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | ip6tables-restore
 +iptables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | grep -iv cilium | iptables-restore
 +ip6tables-save | grep -v KUBE- | grep -v CNI- | grep -iv flannel | grep -iv cilium | ip6tables-restore
++rm /usr/local/bin/helm
++rm /usr/local/bin/cilium
++rm /usr/local/bin/hubble

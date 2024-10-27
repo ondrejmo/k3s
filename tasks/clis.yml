@@ -1,0 +1,79 @@
+---
+
+- name: mkdir /tmp/cilium
+  ansible.builtin.file:
+    path: /tmp/cilium
+    state: directory
+    mode: 0700
+
+- name: unpack cilium
+  ansible.builtin.unarchive:
+    src: "https://github.com/cilium/cilium-cli/releases/download/v{{ k3s_clis.cilium }}/cilium-linux-amd64.tar.gz"
+    dest: /tmp/cilium
+    remote_src: true
+
+- name: copy cilium binary to $PATH
+  ansible.builtin.copy:
+    src: /tmp/cilium/cilium
+    dest: /usr/local/bin/cilium
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: true
+
+- name: rm -r /tmp/cilium
+  ansible.builtin.file:
+    path: /tmp/cilium
+    state: absent
+
+- name: mkdir /tmp/helm
+  ansible.builtin.file:
+    path: /tmp/helm
+    state: directory
+    mode: 0700
+
+- name: unpack helm
+  ansible.builtin.unarchive:
+    src: "https://get.helm.sh/helm-v{{ k3s_clis.helm }}-linux-amd64.tar.gz"
+    dest: /tmp/helm
+    remote_src: true
+
+- name: copy helm binary to $PATH
+  ansible.builtin.copy:
+    src: /tmp/helm/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: true
+
+- name: rm -r /tmp/helm
+  ansible.builtin.file:
+    path: /tmp/helm
+    state: absent
+
+- name: mkdir /tmp/hubble
+  ansible.builtin.file:
+    path: /tmp/hubble
+    state: directory
+    mode: 0700
+
+- name: unpack hubble
+  ansible.builtin.unarchive:
+    src: "https://github.com/cilium/hubble/releases/download/v{{ k3s_clis.hubble }}/hubble-linux-amd64.tar.gz"
+    dest: /tmp/hubble
+    remote_src: true
+
+- name: copy hubble binary to $PATH
+  ansible.builtin.copy:
+    src: /tmp/hubble/hubble
+    dest: /usr/local/bin/hubble
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: true
+
+- name: rm -r /tmp/hubble
+  ansible.builtin.file:
+    path: /tmp/hubble
+    state: absent

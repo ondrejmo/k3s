@@ -128,3 +128,9 @@ k3s_components:
   trivy_operator: "0.24.1" # chart version
   trust_manager: "0.12.0"
   vector: "0.42.0"
+
+# Versions of CLI components
+k3s_clis:
+  cilium: "0.16.16"
+  helm: "3.16.2"
+  hubble: "1.16.2"

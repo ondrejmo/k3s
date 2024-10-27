@@ -24,6 +24,9 @@
   ansible.builtin.import_tasks: install.yml
   when: k3s_installed.rc != 0 or k3s_installed.stdout_lines[0].split(' ')[2].split('+')[0].replace('v', '') is version(k3s_components.k3s.split('+')[0], '<')
 
+- name: add clis
+  ansible.builtin.import_tasks: clis.yml
+
 - name: add additional configuration
   ansible.builtin.import_tasks: configuration.yml
 
