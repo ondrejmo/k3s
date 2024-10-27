@@ -14,11 +14,10 @@ metadata:
   namespace: external-dns
 
 stringData:
-  MIKROTIK_HOST: "{{ k3s_dns.host }}"
+  MIKROTIK_BASEURL: "{{ k3s_dns.url }}"
   MIKROTIK_USERNAME: "{{ k3s_dns.user }}"
   MIKROTIK_PASSWORD: "{{ k3s_dns.pass }}"
   MIKROTIK_SKIP_TLS_VERIFY: "false"
-  MIKROTIK_PORT: "443"
   SERVER_HOST: "0.0.0.0"
   LOG_FORMAT: json
   LOG_LEVEL: info
