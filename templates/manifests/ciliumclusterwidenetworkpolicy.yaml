@@ -26,3 +26,104 @@ spec:
         - matchLabels:
             io.kubernetes.pod.namespace: monitoring-system
             app.kubernetes.io/name: prometheus-agent
+
+# ---
+
+# apiVersion: cilium.io/v2
+# kind: CiliumClusterwideNetworkPolicy
+# metadata:
+#   name: standalone
+
+# spec:
+#   description: "Single-node cluster"
+#   nodeSelector:
+#     matchLabels:
+#       kind: whatever
+#   ingress:
+#     -
+
+# ---
+
+# apiVersion: cilium.io/v2
+# kind: CiliumClusterwideNetworkPolicy
+# metadata:
+#   name: master
+
+# spec:
+#   description: "Master-node of a cluster"
+#   nodeSelector:
+#     matchLabels:
+#       node-role.kubernetes.io/master
+#   ingress:
+#     - fromEntities:
+#         - world
+#       toPorts:
+#         - ports:
+#             - port: "22"
+#               protocol: TCP
+#             - port: "80"
+#               protocol: TCP
+#             - port: "443"
+#               protocol: TCP
+#             - port: "5001"
+#               protocol: TCP
+#             - port: "31234"
+#               protocol: TCP
+#             - port: "31235"
+#               protocol: TCP
+#             - port: "51820"
+#               protocol: TCP
+#     - icmps:
+#         - fields:
+#             - type: 8
+#               family: IPv4
+#     - fromEntities:
+#         - cluster
+#         - host
+#         - remote-node
+#         - kube-apiserver
+#     - fromCIDR:
+#         - 192.168.8.128/25
+
+# ---
+
+# apiVersion: cilium.io/v2
+# kind: CiliumClusterwideNetworkPolicy
+# metadata:
+#   name: agent
+
+# spec:
+#   description: "Agent-node of a cluster"
+#   nodeSelector:
+#     matchLabels:
+#       kind: own
+#   ingress:
+#     - fromEntities:
+#         - cluster
+#         - host
+#         - remote-node
+#         - kube-apiserver
+#     - fromCIDR:
+#         - 192.168.7.0/24
+#         - 192.168.8.0/24
+# #    - toPorts:
+# #        - ports:
+# #            - port: "22"
+# #              protocol: TCP
+# #            - port: "80"
+# #              protocol: TCP
+# #            - port: "443"
+# #              protocol: TCP
+# #            # Syncthing
+# #            - port: "22000"
+# #              protocol: TCP
+# #            # Minecraft
+# #            - port: "31234"
+# #              protocol: TCP
+# #            - port: "31235"
+# #              protocol: TCP
+# #    - icmps:
+# #        - fields:
+# #            - type: 8
+# #              family: IPv4
+
