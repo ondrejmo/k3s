@@ -113,8 +113,6 @@
   loop:
     - src: "{{ lookup('kubernetes.core.kustomize', dir='https://github.com/kubernetes-csi/external-snapshotter/client/config/crd?ref=v' + k3s_components.external_snapshotter) }}"
       dst: external-snapshotter-crds.yaml
-  notify:
-    - restart k3s
 
 - name: add remote manifests
   ansible.builtin.get_url:
@@ -129,8 +127,6 @@
   loop:
     - src: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_components.prometheus_operator }}/stripped-down-crds.yaml"
       dst: "prometheus-operator-crds.yaml"
-  notify:
-    - restart k3s
 
 - name: add local manifests
   ansible.builtin.template:
@@ -165,5 +161,3 @@
     - trivy-operator.yaml
     - vector-events.yaml
     - vector-logs.yaml
-  notify:
-    - restart k3s
