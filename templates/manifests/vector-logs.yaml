@@ -172,7 +172,7 @@ spec:
               mountPath: /var/run/cilium/hubble
               readOnly: true
             - name: var-containerd-log
-              mountPath: /var/lib/rancher/k3s/agent/containerd
+              mountPath: /var/lib/rancher/k3s/agent/containerd/containerd.log
               readOnly: true
       volumes:
         - name: config
