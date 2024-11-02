@@ -122,7 +122,8 @@ spec:
 {% for item in k3s_metric_targets %}
     - url: {{ item.url }}
       sendExemplars: true
-      messageVersion: V2.0
+      messageVersion:
+        - V2.0
       basicAuth:
           username:
             name: prometheus-agent-remotewrite-{{ item.url | urlsplit("hostname") | replace(".", "-") }}
