@@ -42,25 +42,31 @@ data:
             - application/json
 
     transforms:
-      label_events:
+      split_events:
         type: remap
         inputs: [ events ]
         source: |-
-          .tag = "events"
-          .cluster = "{{ k3s_name }}"
+          . = array!(.items)
 
       dedupe_events:
         type: dedupe
-        inputs: [ label_events ]
+        inputs: [ split_events ]
         fields:
           match:
             - metadata.uid
+
+      label_events:
+        type: remap
+        inputs: [ dedupe_events ]
+        source: |-
+          .tag = "events"
+          .cluster = "{{ k3s_name }}"
 
     sinks:
 {% for item in k3s_log_targets %}
       {{ item.host | replace(".", "__") }}:
         type: vector
-        inputs: [ dedupe_events ]
+        inputs: [ label_events ]
         address: {{ item.host }}:{{ item.port }}
         compression: true
 {% if item.tls %}
