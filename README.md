@@ -12,7 +12,7 @@ The highlights of the features are:
 
 - Both local and distributed block storage (with CSI snapshots)
 - Metric based monitoring (based on [kube-prometheus v0.14.0](https://github.com/prometheus-operator/kube-prometheus/releases/tag/v0.14.0))
-- Trivy image and cluster vulnerability scaning scanning
+- Trivy image and cluster vulnerability scanning
 - Automatic DNS records (via [external-dns-provider-mikrotik](https://github.com/mirceanton/external-dns-provider-mikrotik/pkgs/container/external-dns-provider-mikrotik))
 - LoadBalancer with L2 annoucements
 - Intel GPU operator
