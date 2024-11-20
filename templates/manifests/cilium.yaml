@@ -180,7 +180,8 @@ metadata:
   namespace: kube-system
 
 data:
-  {{ k3s_flows | string | from_yaml | to_nice_yaml | indent(2) }}
+  flowlogs.yaml: |
+    {{ k3s_flows | string | from_yaml | to_nice_yaml | indent(4) }}
 
 ---
 
