@@ -16,6 +16,7 @@ spec:
     grafana:
       enabled: true
       configMapName: kyverno-dashboard
+      namespace: monitoring
       labels:
         grafana_dashboard: "true"
     # global:
