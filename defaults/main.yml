@@ -125,7 +125,7 @@ k3s_components:
   prometheus: "3.0.0"
   prometheus_operator: "0.78.2"
   traefik: "33.0.0" # chart version
-  trivy_operator: "0.24.1" # chart version
+  trivy_operator: "0.25.0" # chart version
   trust_manager: "0.13.0"
   vector: "0.42.0"
 
