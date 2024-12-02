@@ -167,16 +167,14 @@ spec:
   podMonitorSelector: {}
   serviceMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
+  probeNamespaceSelector: {}
+  probeSelector: {}
 
   # each Prometheus reads only those in his namespace
   scrapeConfigNamespaceSelector:
     matchLabels:
       kubernetes.io/metadata.name: monitoring-system
   scrapeConfigSelector: {}
-  probeNamespaceSelector:
-    matchLabels:
-      kubernetes.io/metadata.name: monitoring-system
-  probeSelector: {}
 
 ---
 
