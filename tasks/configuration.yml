@@ -141,6 +141,7 @@
     - cert-manager.yaml
     - cilium.yaml
     - ciliumclusterwidenetworkpolicy.yaml
+    - clusterpolicy.yaml
     - external-dns.yaml
     - external-snapshotter.yaml
     - intel-gpu.yaml
