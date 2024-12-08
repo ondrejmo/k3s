@@ -22,14 +22,16 @@ The highlights of the features are:
   - Kubernetes API audit logs
   - Kubernetes events
   - Kubermetes pod logs
+  - Trivy reports
   - CoreDNS query logs
   - System logs of the nodes
+  - ....
 
 ## Roadmap
 
 - [ ] add longhorn encrypt storageclass
 - [ ] add hostfirewall to cilium
-- [ ] make vector-events more extensible (and add trivy webhook)
 - [ ] release the [helm charts](https://github.com/ondrejmo/charts) for services in the cluster
+- [x] make vector-events more extensible (and add trivy webhook)
 - [x] release the [core role](https://github.com/ondrejmo/core) that serves as baseline for k3s nodes (and other use-cases)
 - [x] add clis for in cluster components (hubble, ...)

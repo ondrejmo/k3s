@@ -22,6 +22,8 @@ spec:
       metricsImageInfo: true
       metricsClusterComplianceInfo: true
       scanJobsConcurrentLimit: 1
+      webhookBroadcastURL: http://vector-events.monitoring-system.svc/trivy
+      webhookSendDeletedReports: true
     trivy:
       command: rootfs
       resources:
@@ -78,6 +80,18 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    - ports:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vector-events
+      ports:
+        - protocol: TCP
+          port: 80
+    - from:
+        - namespaceSelector: {}
+      ports:
         - protocol: TCP
           port: 6443
