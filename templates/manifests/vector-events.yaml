@@ -105,7 +105,7 @@ data:
 {% if item.tls %}
         tls:
           enabled: true
-          ca_file: /tls/ca-certificates.crt
+          ca_file: /etc/ssl/certs/ca-certificates.crt
 {% endif %}
 {% endfor %}
 
@@ -216,12 +216,7 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/vector
-            - name: ca
-              mountPath: /tls
       volumes:
         - name: config
           configMap:
             name: vector-events-config
-        - name: ca
-          configMap:
-            name: trusted-ca-bundle
