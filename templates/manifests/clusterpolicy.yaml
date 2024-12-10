@@ -106,4 +106,68 @@ spec:
             - kind: ServiceAccount
               name: workflow
 
+---
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-pod-defaults
+
+spec:
+  background: false
+  rules:
+    - name: add-ca-certificates
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: AnyIn
+            value:
+              - CREATE
+              - UPDATE
+      mutate:
+        foreach:
+          - list: request.object.spec.containers
+            patchStrategicMerge:
+              spec:
+                containers:
+                  - name: "{{ element.name }}"
+                    volumeMounts:
+                      - name: ca
+                        mountPath: /etc/ssl/certs
+                        readOnly: true
+                volumes:
+                  - name: ca
+                    configMap:
+                      name: trusted-ca-bundle
+
+    - name: add-requests
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      preconditions:
+        any:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: AnyIn
+            value:
+              - CREATE
+              - UPDATE
+      mutate:
+        foreach:
+          - list: request.object.spec.containers[]
+            patchStrategicMerge:
+              spec:
+                containers:
+                  - (name): "{{ element.name }}"
+                    resources:
+                      requests:
+                        +(memory): 128Mi
+                        +(cpu): 100m
+
 {% endraw %}
