@@ -28,8 +28,11 @@ spec:
       command: rootfs
       resources:
         requests:
-          cpu: 100m
-          memory: 100M
+          cpu: 400m
+          memory: 256Mi
+        limits:
+          cpu: 800m
+          memory: 512Mi
     trivyOperator:
       skipResourceByLabels: trivy.io/skip
       scanJobPodTemplateContainerSecurityContext:
