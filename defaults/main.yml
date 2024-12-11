@@ -127,7 +127,7 @@ k3s_components:
   traefik: "33.2.0" # chart version
   trivy_operator: "0.25.0" # chart version
   trust_manager: "0.14.0"
-  vector: "0.43.0"
+  vector: "0.43.1"
 
 # Versions of CLI components
 k3s_clis:
