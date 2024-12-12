@@ -194,7 +194,7 @@ spec:
     all:
       - key: "{{ time_diff('{{target.metadata.creationTimestamp}}','{{ time_now_utc() }}') }}"
         operator: GreaterThan
-        value: "168hh0m0s"
+        value: "168h0m0s"
   schedule: "0 */8  * * *"
 
 {% endraw %}
