@@ -172,4 +172,29 @@ spec:
                         +(memory): 128Mi
                         +(cpu): 100m
 
+---
+
+apiVersion: kyverno.io/v2beta1
+kind: ClusterCleanupPolicy
+metadata:
+  name: delete-old-pods
+
+spec:
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+  # exclude:
+  #   any:
+  #     - resources:
+  #         namespaces:
+  #           - kube-system
+  conditions:
+    all:
+      - key: "{{ time_diff('{{target.metadata.creationTimestamp}}','{{ time_now_utc() }}') }}"
+        operator: GreaterThan
+        value: "168hh0m0s"
+  schedule: "0 */8  * * *"
+
 {% endraw %}
