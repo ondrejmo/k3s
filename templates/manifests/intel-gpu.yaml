@@ -15,8 +15,6 @@ spec:
       labels:
         app.kubernetes.io/name: intel-gpu-plugin
     spec:
-      nodeSelector:
-        kubernetes.io/arch: amd64
       initContainers:
         - name: intel-gpu-init
           image: intel/intel-gpu-initcontainer:{{ k3s_components.intel_gpu }}
