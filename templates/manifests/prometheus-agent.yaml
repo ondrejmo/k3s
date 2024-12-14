@@ -115,6 +115,7 @@ spec:
 
   serviceAccountName: prometheus-agent
 
+  enableOTLPReceiver: true
   enableFeatures:
     - exemplar-storage
 
