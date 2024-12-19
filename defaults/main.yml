@@ -65,7 +65,7 @@ k3s_log_targets:
 
 # Prometheus remote-write
 k3s_metric_targets:
-  - url: https://prometheus.home.arpa/api/v2/write
+  - url: https://prometheus.home.arpa/api/v1/write
     user: admin
     pass: admin
 

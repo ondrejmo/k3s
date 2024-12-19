@@ -115,9 +115,15 @@ spec:
 
   serviceAccountName: prometheus-agent
 
+  tsdb:
+    outOfOrderTimeWindow: 15m
+
   enableOTLPReceiver: true
   enableFeatures:
     - exemplar-storage
+
+  externalLabels:
+    cluster: {{ k3s_name }}
 
   remoteWrite:
 {% for item in k3s_metric_targets %}
@@ -136,10 +142,6 @@ spec:
           configMap:
             name: trusted-ca-bundle
             key: ca-certificates.crt
-      writeRelabelConfigs:
-        - action: replace
-          targetLabel: cluster
-          replacement: {{ k3s_name }}
 {% endfor %}
 
   securityContext:

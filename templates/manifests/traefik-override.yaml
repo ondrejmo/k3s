@@ -95,6 +95,7 @@ spec:
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.web.http.redirections.entrypoint.permanent=true
       - --entrypoints.web.http.redirections.entrypoint.priority=1
+      - --entrypoints.web.transport.respondingTimeouts.readTimeout=5m
       # assign default middlewares
       - --providers.file.filename=/config/middlewares.yml
       - --entrypoints.websecure,default-headers@file
