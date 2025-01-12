@@ -110,13 +110,13 @@ spec:
   version: v{{ k3s_components.prometheus }}
   replicas: 1
   logLevel: info
-  logFormat: json
+  logFormat: logfmt
   scrapeInterval: 30s
 
   serviceAccountName: prometheus-agent
 
   tsdb:
-    outOfOrderTimeWindow: 15m
+    outOfOrderTimeWindow: 30m
 
   enableOTLPReceiver: true
   enableFeatures:
@@ -150,6 +150,34 @@ spec:
     fsGroup: 2000
     seccompProfile:
       type: RuntimeDefault
+
+  initContainers:
+    - name: init-config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+
+  containers:
+    - name: prometheus
+      securityContext:
+        allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
 
   resources:
     requests:
