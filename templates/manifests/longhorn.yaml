@@ -33,6 +33,7 @@ spec:
       logLevel: Error
       createDefaultDiskLabeledNodes: "true"
       name: create-default-disk-labeled-nodes
+      allowCollectingLonghornUsageMetrics: "false"
     persistence:
       defaultClass: false
       defaultFsType: ext4
