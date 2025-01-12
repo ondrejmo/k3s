@@ -138,6 +138,7 @@
   when:
     - k3s_role == 'server'
   loop:
+    - argocd-manager.yaml
     - cert-manager.yaml
     - cilium.yaml
     - ciliumclusterwidenetworkpolicy.yaml
