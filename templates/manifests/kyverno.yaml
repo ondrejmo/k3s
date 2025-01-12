@@ -79,20 +79,29 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kyverno:background-controller:escalate
+  name: kyverno:admission-controller:rbac
   labels:
-    app.kubernetes.io/component: background-controller
+    app.kubernetes.io/component: admission-controller
     app.kubernetes.io/instance: kyverno
     app.kubernetes.io/part-of: kyverno
 
 rules:
   - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
       - rbac.authorization.k8s.io
     resources:
-      - clusterroles
       - roles
+      - rolebindings
     verbs:
-      - escalate
+      - "*"
 
 ---
 
@@ -102,6 +111,25 @@ metadata:
   name: kyverno:background-controller:secrets
   labels:
     app.kubernetes.io/component: background-controller
+    app.kubernetes.io/instance: kyverno
+    app.kubernetes.io/part-of: kyverno
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - "*"
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kyverno:admission-controller:secrets
+  labels:
+    app.kubernetes.io/component: admission-controller
     app.kubernetes.io/instance: kyverno
     app.kubernetes.io/part-of: kyverno
 
