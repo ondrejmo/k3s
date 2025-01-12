@@ -124,7 +124,7 @@ k3s_components:
   local_path_provisioner: "0.0.30"
   longhorn: "1.7.2"
   node_exporter: "1.8.2"
-  prometheus: "3.0.1"
+  prometheus: "3.1.0"
   prometheus_operator: "0.79.2"
   traefik: "33.2.1" # chart version
   trivy_operator: "0.25.0" # chart version
