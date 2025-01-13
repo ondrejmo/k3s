@@ -118,7 +118,7 @@ k3s_components:
   external_dns_mikrotik: "1.2.6"
   external_snapshotter: "6.3.2" # mandated by longhorn
   intel_gpu: "0.30.0"
-  k3s: "1.30.8+k3s1"
+  k3s: "1.31.4+k3s1"
   kube_state_metrics: "2.14.0"
   kyverno: "3.3.3" # chart version
   local_path_provisioner: "0.0.30"
