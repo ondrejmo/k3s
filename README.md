@@ -7,6 +7,7 @@ This deploys a turnkey cluster, with all components, hardening and observability
 - Internal CA and local DNS, using RouterOS DNS
 - Log collector via Vector.dev protocol
 - Metric collector via remote write api
+- IPv4-only, with IPv6 being disabled only in sysctl, not in kernel parameters, as disabling it at kernel level causes a myriad of annoying problems
 
 The highlights of the features are:
 
