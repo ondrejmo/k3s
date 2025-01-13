@@ -10,6 +10,8 @@ spec:
   chart: https://%{KUBERNETES_API}%/static/charts/longhorn-{{ k3s_components.longhorn }}.tgz
   targetNamespace: longhorn-system
   createNamespace: true
+  # https://github.com/longhorn/longhorn/issues/9506
+  failurePolicy: abort
   # https://github.com/longhorn/charts/blob/longhorn-1.7.1/charts/longhorn/values.yaml
   valuesContent: |-
     metrics:
