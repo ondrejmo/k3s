@@ -133,6 +133,6 @@ k3s_components:
 
 # Versions of CLI components
 k3s_clis:
-  cilium: "0.16.16"
-  helm: "3.16.4"
-  hubble: "1.16.2"
+  cilium: "0.16.23"
+  helm: "3.17.0"
+  hubble: "1.16.4"
