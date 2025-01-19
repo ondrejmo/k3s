@@ -38,7 +38,8 @@ spec:
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.web.http.redirections.entrypoint.permanent=true
       - --entrypoints.web.http.redirections.entrypoint.priority=1
-      - --entrypoints.web.transport.respondingTimeouts.readTimeout=5m
+      # large posts take long
+      - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=300s
       # assign default middlewares
       - --providers.file.filename=/config/middlewares.yml
       - --entrypoints.websecure,default-headers@file
@@ -58,8 +59,8 @@ spec:
             name: traefik-middlewares
     resources:
       requests:
-        cpu: 10m
-        memory: 64Mi
+        cpu: 20m
+        memory: 128Mi
     service:
       spec:
         loadBalancerIP: "{{ k3s_loadbalancer.pools[0].start }}"
@@ -121,8 +122,11 @@ data:
           headers:
             customFrameOptionsValue: "SAMEORIGIN"
             customResponseHeaders:
+              # necessarry for widgets (e.g. ArgoCD badges)
               Content-Security-Policy: "frame-ancestors 'self' *.{{ ansible_fqdn.split(".")[1:] | join(".") }}"
+              # do not index
               X-Robots-Tag: "none"
+              # do not share unnecessarry details
               X-powered-By: ""
               Server: ""
             accessControlAllowOriginList:
