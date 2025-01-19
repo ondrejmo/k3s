@@ -120,7 +120,7 @@ k3s_components:
   intel_gpu: "0.30.0"
   k3s: "1.31.4+k3s1"
   kube_state_metrics: "2.14.0"
-  kyverno: "3.3.3" # chart version
+  kyverno: "3.3.4" # chart version
   local_path_provisioner: "0.0.30"
   longhorn: "1.7.2"
   node_exporter: "1.8.2"
