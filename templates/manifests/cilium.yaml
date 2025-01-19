@@ -271,3 +271,24 @@ spec:
     - "{{ ad.iface }}"
 
 {% endfor %}
+{% raw %}
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cilium
+
+spec:
+  groups:
+    - name: cilium
+      rules:
+        - alert: HubbleDropRate
+          expr: sum(rate(hubble_drop_total[1m])) by (reason,protocol,cluster) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Hubble observes too many dropped packets"
+            description: "Hubble in {{ $labels.cluster }} observes increase drop rate of {{ $value }} for more than 5 minutes. Protocol {{ $labels.protocol }} with reason {{ $labels.reason }}"
+{% endraw %}
