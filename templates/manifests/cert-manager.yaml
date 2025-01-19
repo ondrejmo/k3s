@@ -24,6 +24,15 @@ spec:
       enabled: true
     webhook:
       replicaCount: 1
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+    cainjector:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
     prometheus:
       enabled: true
       servicemonitor:
@@ -51,7 +60,7 @@ spec:
             enabled: true
     resources:
       requests:
-        cpu: 10m
+        cpu: 5m
         memory: 32Mi
     crds:
       enabled: true
