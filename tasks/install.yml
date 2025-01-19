@@ -4,13 +4,13 @@
   ansible.builtin.get_url:
     url: https://get.k3s.io
     dest: /tmp/k3s-install.sh
-    mode: 0700
+    mode: "0700"
     owner: root
     group: root
 
 # DISCLAIMER: for etcd cluster use this first: k3s server --cluster-init
 - name: execute k3s-install.sh
-  ansible.builtin.shell: /tmp/k3s-install.sh
+  ansible.builtin.command: /tmp/k3s-install.sh
   environment:
     INSTALL_K3S_EXEC: "{{ k3s_role }}"
     INSTALL_K3S_SKIP_START: "true"
@@ -34,7 +34,7 @@
   ansible.builtin.copy:
     content: "{{ kubectl_completion.stdout }}"
     dest: /etc/bash_completion.d/kubectl
-    mode: 0644
+    mode: "0644"
     owner: root
     group: root
 
@@ -47,7 +47,7 @@
   ansible.builtin.copy:
     content: "{{ k3s_completion.stdout }}"
     dest: /etc/bash_completion.d/k3s
-    mode: 0644
+    mode: "0644"
     owner: root
     group: root
 
