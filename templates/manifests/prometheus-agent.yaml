@@ -116,20 +116,25 @@ spec:
   serviceAccountName: prometheus-agent
 
   tsdb:
-    outOfOrderTimeWindow: 30m
+    outOfOrderTimeWindow: 15m
 
-  enableOTLPReceiver: true
   enableFeatures:
     - exemplar-storage
 
   externalLabels:
     cluster: {{ k3s_name }}
 
+  # https://github.com/cilium/hubble-ui/issues/789
+  podMetadata:
+    labels:
+      app: prometheus
+
   remoteWrite:
 {% for item in k3s_metric_targets %}
     - url: {{ item.url }}
       sendExemplars: true
       messageVersion: V2.0
+      enableHTTP2: true
       basicAuth:
           username:
             name: prometheus-agent-remotewrite-{{ item.url | urlsplit("hostname") | replace(".", "-") }}
@@ -182,7 +187,7 @@ spec:
   resources:
     requests:
       cpu: 20m
-      memory: 1024Mi
+      memory: 768Mi
 
   affinity:
     podAntiAffinity:
