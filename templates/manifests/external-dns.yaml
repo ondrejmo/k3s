@@ -193,6 +193,10 @@ spec:
             runAsGroup: 65532
             runAsNonRoot: true
             runAsUser: 65532
+          resources:
+            requests:
+              cpu: 5m
+              memory: 32Mi
           ports:
             - name: http
               containerPort: 7979
@@ -216,6 +220,10 @@ spec:
             timeoutSeconds: 5
         - name: webhook
           image: ghcr.io/mirceanton/external-dns-provider-mikrotik:v{{ k3s_components.external_dns_mikrotik }}
+          resources:
+            requests:
+              cpu: 5m
+              memory: 32Mi
           envFrom:
             - secretRef:
                 name: external-dns-mikrotik
