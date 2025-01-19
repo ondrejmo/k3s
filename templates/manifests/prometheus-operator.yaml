@@ -255,11 +255,8 @@ spec:
                 - ALL
             readOnlyRootFilesystem: true
           resources:
-            limits:
-              cpu: 200m
-              memory: 200Mi
             requests:
-              cpu: 10m
+              cpu: 5m
               memory: 32Mi
           env:
             - name: GOGC
@@ -315,11 +312,8 @@ spec:
             - name: https
               containerPort: 8443
           resources:
-            limits:
-              cpu: 200m
-              memory: 200Mi
             requests:
-              cpu: 10m
+              cpu: 5m
               memory: 32Mi
           volumeMounts:
             - mountPath: /etc/tls/private
