@@ -206,7 +206,7 @@ spec:
           resources:
             requests:
               cpu: 20m
-              memory: 64Mi
+              memory: 128Mi
           env:
             - name: KUBE_TOKEN
               valueFrom:
