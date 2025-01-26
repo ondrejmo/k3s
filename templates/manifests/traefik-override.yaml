@@ -31,8 +31,6 @@ spec:
         operator: Exists
         effect: NoSchedule
     additionalArguments:
-      # backend tls is not verified (my pods have some trust issues)
-      - --serversTransport.insecureSkipVerify=true
       # default redirect (priority 1 ~ easily overuled)
       - --entrypoints.web.http.redirections.entryPoint.to=:443
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
@@ -122,7 +120,7 @@ data:
           headers:
             customFrameOptionsValue: "SAMEORIGIN"
             customResponseHeaders:
-              # necessarry for widgets (e.g. ArgoCD badges)
+              # necessarry for widgets
               Content-Security-Policy: "frame-ancestors 'self' *.{{ ansible_fqdn.split(".")[1:] | join(".") }}"
               # do not index
               X-Robots-Tag: "none"
