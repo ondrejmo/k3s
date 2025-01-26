@@ -20,10 +20,25 @@
   notify:
     - restart k3s
 
-- name: patch k3s-uninstall.sh
+# diff -Naru /usr/local/bin/k3s-killall.sh ./k3s-killall.sh > k3s-killall.patch
+- name: patch k3s-killall.sh
   ansible.posix.patch:
     src: k3s-killall.patch
     dest: /usr/local/bin/k3s-killall.sh
+
+- name: patch k3s-uninstall.sh
+  ansible.posix.patch:
+    src: k3s-uninstall.patch
+    dest: /usr/local/bin/k3s-uninstall.sh
+  when:
+    - k3s_role == 'server'
+
+- name: patch k3s-agent-uninstall.sh
+  ansible.posix.patch:
+    src: k3s-agent-uninstall.patch
+    dest: /usr/local/bin/k3s-agent-uninstall.sh
+  when:
+    - k3s_role == 'agent'
 
 - name: kubectl completion bash
   ansible.builtin.command: kubectl completion bash
@@ -58,5 +73,6 @@
   loop:
     - /tmp/k3s-install.sh
     - /usr/local/bin/k3s-killall.sh.orig
+    - /usr/local/bin/k3s-uninstall.sh.orig
   notify:
     - reboot

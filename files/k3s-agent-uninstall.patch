@@ -1,0 +1,13 @@
+--- /usr/local/bin/k3s-agent-uninstall.sh       2025-01-25 19:34:01.849935443 +0100
++++ k3s-agent-uninstall.sh      2025-01-25 21:36:28.584807256 +0100
+@@ -60,6 +60,10 @@
+ rm -rf /var/lib/kubelet
+ rm -f /usr/local/bin/k3s
+ rm -f /usr/local/bin/k3s-killall.sh
++rm -f /usr/local/bin/helm
++rm -f /usr/local/bin/cilium
++rm -f /usr/local/bin/hubble
++rm -f /usr/local/bin/flux
+
+ if type yum >/dev/null 2>&1; then
+     yum remove -y k3s-selinux
