@@ -33,8 +33,11 @@ k3s_api:
   host: kube.home.arpa
   whitelist:
     - 192.168.0.0/16
-    # In case you have ArgoCD inside the cluster
-    - 10.42.0.0/16
+
+# Whitelist for SSH and NFS service on the host system
+k3s_firewall:
+  whitelist:
+    - 192.168.0.0/16
 
 # Certifications authority that will be used to issue certs and include in TrustBundle (both cert and key as a multiline string)
 k3s_ca:

@@ -3,7 +3,7 @@
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: default
+  name: default-deny-ingress
 
 spec:
   description: Deny all ingress by default
@@ -16,7 +16,7 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: default-prometheus-agent
+  name: default-allow-ingress-prometheus-agent
 
 spec:
   description: Allow all ingress traffic from prometheus-agent
@@ -32,98 +32,36 @@ spec:
 # apiVersion: cilium.io/v2
 # kind: CiliumClusterwideNetworkPolicy
 # metadata:
-#   name: standalone
+#   name: default-deny-egress-world
 
 # spec:
-#   description: "Single-node cluster"
-#   nodeSelector:
-#     matchLabels:
-#       kind: whatever
-#   ingress:
-#     -
-
-# ---
-
-# apiVersion: cilium.io/v2
-# kind: CiliumClusterwideNetworkPolicy
-# metadata:
-#   name: master
-
-# spec:
-#   description: "Master-node of a cluster"
-#   nodeSelector:
-#     matchLabels:
-#       node-role.kubernetes.io/master
-#   ingress:
-#     - fromEntities:
+#   description: Deny allow egress traffic to world (unless explicitly allowed)
+#   endpointSelector: {}
+#   egress:
+#     - toEntities:
 #         - world
-#       toPorts:
-#         - ports:
-#             - port: "22"
-#               protocol: TCP
-#             - port: "80"
-#               protocol: TCP
-#             - port: "443"
-#               protocol: TCP
-#             - port: "5001"
-#               protocol: TCP
-#             - port: "31234"
-#               protocol: TCP
-#             - port: "31235"
-#               protocol: TCP
-#             - port: "51820"
-#               protocol: TCP
-#     - icmps:
-#         - fields:
-#             - type: 8
-#               family: IPv4
-#     - fromEntities:
-#         - cluster
-#         - host
-#         - remote-node
-#         - kube-apiserver
-#     - fromCIDR:
-#         - 192.168.8.128/25
 
-# ---
+---
 
-# apiVersion: cilium.io/v2
-# kind: CiliumClusterwideNetworkPolicy
-# metadata:
-#   name: agent
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: node
 
-# spec:
-#   description: "Agent-node of a cluster"
-#   nodeSelector:
-#     matchLabels:
-#       kind: own
-#   ingress:
-#     - fromEntities:
-#         - cluster
-#         - host
-#         - remote-node
-#         - kube-apiserver
-#     - fromCIDR:
-#         - 192.168.7.0/24
-#         - 192.168.8.0/24
-# #    - toPorts:
-# #        - ports:
-# #            - port: "22"
-# #              protocol: TCP
-# #            - port: "80"
-# #              protocol: TCP
-# #            - port: "443"
-# #              protocol: TCP
-# #            # Syncthing
-# #            - port: "22000"
-# #              protocol: TCP
-# #            # Minecraft
-# #            - port: "31234"
-# #              protocol: TCP
-# #            - port: "31235"
-# #              protocol: TCP
-# #    - icmps:
-# #        - fields:
-# #            - type: 8
-# #              family: IPv4
-
+spec:
+  nodeSelector:
+    matchLabels: {}
+  ingress:
+    - fromEntities:
+        - host
+        - cluster
+        - remote-node
+    - fromCIDR: {{ k3s_firewall.whitelist }}
+      toPorts:
+        - ports:
+            # ssh
+            - port: "22"
+              protocol: TCP
+            # nfs
+            - port: "2049"
+              protocol: TCP
