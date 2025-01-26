@@ -22,8 +22,6 @@ spec:
       metricsImageInfo: true
       metricsClusterComplianceInfo: true
       scanJobsConcurrentLimit: 1
-      webhookBroadcastURL: http://vector-events.monitoring-system.svc/trivy
-      webhookSendDeletedReports: true
     trivy:
       command: rootfs
       resources:
