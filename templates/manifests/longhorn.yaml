@@ -12,7 +12,7 @@ spec:
   createNamespace: true
   # https://github.com/longhorn/longhorn/issues/9506
   failurePolicy: abort
-  # https://github.com/longhorn/charts/blob/longhorn-1.7.2/charts/longhorn/values.yaml
+  # https://github.com/longhorn/charts/blob/longhorn-1.8.0/charts/longhorn/values.yaml
   valuesContent: |-
     metrics:
       serviceMonitor:
@@ -21,7 +21,6 @@ spec:
       enabled: true
       type: k3s
     defaultSettings:
-      backupTarget: "{{ k3s_backup }}"
       concurrentAutomaticEngineUpgradePerNodeLimit: "1"
       defaultDataLocality: best-effort
       defaultDataPath: {{ k3s_storage.longhorn }}
@@ -36,13 +35,17 @@ spec:
       createDefaultDiskLabeledNodes: "true"
       name: create-default-disk-labeled-nodes
       allowCollectingLonghornUsageMetrics: "false"
+    defaultBackupStore:
+      backupTarget: "{{ k3s_backup }}"
     persistence:
+      backupTargetName: default
       defaultClass: false
       defaultFsType: ext4
       defaultClassReplicaCount: 1
       defaultDataLocality: best-effort
       reclaimPolicy: Retain
     # DISCLAIMER: this only works on single node clusters (https://github.com/longhorn/longhorn/issues/3816#issuecomment-1094552437)
+    #             and in two node non-HA clusters, probably ... '=)
     longhornUI:
       replicas: 1
     csi:
