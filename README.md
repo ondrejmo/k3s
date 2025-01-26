@@ -2,7 +2,7 @@
 
 This deploys a turnkey cluster, with all components, hardening and observability required by my use-case. This role is heavily optimized for the following environment:
 
-- Single-node, but multi-cluster. It works for multi-node single-master as well, though without my regular testing. HA use-cases would require additional ETCD initialization step and many adjustments in the workloads. The primary goal of this role is efficiency and resiliciency, not availability.
+- Multiple non-HA clusters, because the primary goal of this role is efficiency and resiliciency (along with horizontal scaling), not high-availability.
 - Intel based nodes with core i3 gen 8 (or better / newer)
 - Internal CA and local DNS, using RouterOS DNS
 - Log collector via Vector.dev protocol
@@ -27,12 +27,3 @@ The highlights of the features are:
   - CoreDNS query logs
   - System logs of the nodes
   - ....
-
-## Roadmap
-
-- [ ] add longhorn encrypt storageclass
-- [ ] add hostfirewall to cilium
-- [ ] release the [helm charts](https://github.com/ondrejmo/charts) for services in the cluster
-- [x] make vector-events more extensible (and add trivy webhook)
-- [x] release the [core role](https://github.com/ondrejmo/core) that serves as baseline for k3s nodes (and other use-cases)
-- [x] add clis for in cluster components (hubble, ...)

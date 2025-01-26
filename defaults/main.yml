@@ -1,7 +1,7 @@
 ---
 
 # Name of the cluster (must be the same accross all "servers"), use for metric and log labels.
-k3s_name: "wolfpack"
+k3s_name: "velkamorava"
 
 # Role of the node, either "agent" or "server"
 k3s_role: "server"
@@ -137,5 +137,6 @@ k3s_components:
 # Versions of CLI components
 k3s_clis:
   cilium: "0.16.23"
+  flux: "2.4.0"
   helm: "3.17.0"
-  hubble: "1.16.4"
+  hubble: "1.16.6"

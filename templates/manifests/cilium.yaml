@@ -10,7 +10,7 @@ spec:
   chart: https://{{ k3s_host }}:6443/static/charts/cilium-{{ k3s_components.cilium }}.tgz
   targetNamespace: kube-system
   bootstrap: true
-  # https://github.com/cilium/cilium/blob/v1.16.1/install/kubernetes/cilium/values.yaml
+  # https://github.com/cilium/cilium/blob/v1.16.6/install/kubernetes/cilium/values.yaml
   valuesContent: |-
     k8sServiceHost: 127.0.0.1
     k8sServicePort: 6444

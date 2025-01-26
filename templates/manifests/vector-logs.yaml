@@ -32,7 +32,6 @@ data:
           - /var/log/kern.log
           - /var/lib/rancher/k3s/server/logs/audit.log
           - /var/lib/rancher/k3s/agent/containerd/containerd.log
-          - /var/log/smartctl.json
           - /var/log/syslog
           - /var/run/cilium/hubble/events.log
 
