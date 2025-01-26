@@ -246,3 +246,4 @@ spec:
         - action: labeldrop
           regex: (pod|service|endpoint|namespace)
     - port: telemetry
+      honorLabels: true
