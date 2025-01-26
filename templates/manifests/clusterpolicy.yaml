@@ -56,12 +56,16 @@ spec:
           - list: request.object.spec.containers[]
             patchStrategicMerge:
               spec:
+                enableServiceLinks: false
                 containers:
                   - (name): "{{ element.name }}"
                     resources:
                       requests:
                         +(memory): 128Mi
                         +(cpu): 100m
+                    env:
+                      - name: TZ
+                        value: Europe/Prague
 
 ---
 
