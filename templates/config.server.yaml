@@ -13,7 +13,7 @@ flannel-backend: none
 disable-network-policy: true
 disable-kube-proxy: true
 etcd-snapshot-retention: 20
-embedded-registry: false # nice feature, but my current single-node mode of operation does not benefit from it
+embedded-registry: true
 disable:
   - traefik
   - servicelb # overriden
