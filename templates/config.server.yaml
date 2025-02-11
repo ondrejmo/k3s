@@ -18,6 +18,7 @@ disable:
   - traefik
   - servicelb # overriden
   - local-storage # overriden
+  - metrics-server # overriden
 
 kube-apiserver-arg:
   - admission-control-config-file=/var/lib/rancher/k3s/server/psa.yaml

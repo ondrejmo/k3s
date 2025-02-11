@@ -151,8 +151,7 @@
     - kyverno.yaml
     - local-path-provisioner-override.yaml
     - longhorn.yaml
-    - metrics-server/networkpolicy.yaml
-    - metrics-server/servicemonitor.yaml
+    - metrics-server-override.yaml
     - monitoring-system.yaml
     - monitoring.yaml
     - node-exporter.yaml
