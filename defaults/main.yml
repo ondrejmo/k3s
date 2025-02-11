@@ -152,4 +152,4 @@ k3s_components:
 k3s_clis:
   cilium: "0.16.24"
   helm: "3.17.0"
-  hubble: "1.16.6"
+  hubble: "1.17.0"
