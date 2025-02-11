@@ -130,7 +130,7 @@ k3s_components:
   cert_manager: "1.17.0"
   cilium: "1.17.0"
   external_dns: "0.15.1"
-  external_dns_mikrotik: "1.4.1"
+  external_dns_mikrotik: "1.4.2"
   external_snapshotter: "8.2.0" # mandated by longhorn
   intel_gpu: "0.30.0"
   kube_prometheus: "0.14" # just the dashboards
