@@ -36,6 +36,8 @@ k3s_api:
 
 # Whitelist for SSH and NFS service on the host system
 k3s_firewall:
+  # Set to "true" on all masters during new node registration
+  auditmode: false
   whitelist:
     - 192.168.0.0/16
 
