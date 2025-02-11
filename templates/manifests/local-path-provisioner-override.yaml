@@ -125,6 +125,7 @@ metadata:
   namespace: kube-system
 
 spec:
+  replicas: 1
   revisionHistoryLimit: 3
   strategy:
     type: RollingUpdate

@@ -4,11 +4,31 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: add-pod-defaults
+  name: add-workload-defaults
 
 spec:
   background: false
   rules:
+    - name: add-revisionhistorylimit
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: AnyIn
+            value:
+              - CREATE
+              - UPDATE
+      mutate:
+        patchStrategicMerge:
+          spec:
+            revisionHistoryLimit: 3
+
     - name: add-ca-certificates
       match:
         any:

@@ -220,7 +220,7 @@ metadata:
   namespace: monitoring-system
 
 spec:
-  revisionHistoryLimit: 3
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus-operator
@@ -274,7 +274,7 @@ metadata:
   namespace: monitoring-system
 
 spec:
-  revisionHistoryLimit: 3
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus-operator-admission-webhook
