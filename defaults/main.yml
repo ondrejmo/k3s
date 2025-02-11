@@ -134,6 +134,7 @@ k3s_components:
   external_snapshotter: "8.2.0" # mandated by longhorn
   intel_gpu: "0.30.0"
   k3s: "1.31.5+k3s1"
+  kube_state_metrics: "2.15.0"
   kube_prometheus: "0.14" # just the dashboards
   local_path_provisioner: "0.0.30"
   longhorn: "1.8.0"
