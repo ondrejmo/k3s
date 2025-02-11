@@ -49,12 +49,19 @@ spec:
       # @file middlewares are cross-namespace available
       - name: traefik-middlewares
         mountPath: /config
+      # manually mount ca-bundle, because kyverno ignore */* in kube-system
+      - name: ca
+        mountPath: /etc/ssl/certs
+        readOnly: true
     deployment:
       kind: DaemonSet
       additionalVolumes:
         - name: traefik-middlewares
           configMap:
             name: traefik-middlewares
+        - name: ca
+          configMap:
+            name: trusted-ca-bundle
     resources:
       requests:
         cpu: 20m
