@@ -7,15 +7,25 @@ metadata:
   namespace: monitoring-system
 
 data:
-  agent.yml: |
+  vector-logs.yml: |
     ---
+
+    timezone: Europe/Prague
 
     data_dir: /var/lib/vector
 
     api:
-      enabled: false
+      address: 0.0.0.0:8686
+      playground: false
+      enabled: true
 
     sources:
+      metrics:
+        type: internal_metrics
+
+      logs:
+        type: internal_logs
+
       kube:
         type: kubernetes_logs
 
@@ -32,11 +42,30 @@ data:
           - /var/log/kern.log
           - /var/lib/rancher/k3s/server/logs/audit.log
           - /var/lib/rancher/k3s/agent/containerd/containerd.log
+          - /var/log/smartctl.json
           - /var/log/syslog
           - /var/run/cilium/hubble/events.log
 
     transforms:
-      label_logs:
+      label_vector_logs:
+        type: remap
+        inputs: [ logs ]
+        source: |-
+          .tag = "vector"
+          .type = "vector-logs"
+          .host = get_hostname!()
+          .cluster = "{{ k3s_name }}"
+
+      label_vector_metrics:
+        type: remap
+        inputs: [ metrics ]
+        source: |-
+          .tags.job = "vector"
+          .tags.type = "vector-logs"
+          .tags.host = get_hostname!()
+          .tags.cluster = "{{ k3s_name }}"
+
+      label_file:
         type: remap
         inputs: [ file ]
         source: |-
@@ -55,9 +84,13 @@ data:
 {% for item in k3s_log_targets %}
       {{ item.host | replace(".", "__") }}:
         type: vector
-        inputs: [ label_logs, label_kube ]
+        inputs: [ label_vector_logs, label_vector_metrics, label_file, label_kube ]
         address: {{ item.host }}:{{ item.port }}
         compression: true
+        buffer:
+          type: disk
+          max_size: 2147483648 # 2Gi
+          when_full: block
 {% if item.tls %}
         tls:
           enabled: true
@@ -125,7 +158,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: vector-logs
-        # DISCLAIMER: to prevent accidental feedback loop
+        # DISCLAIMER: logs are collected internally
         vector.dev/exclude: "true"
     spec:
       serviceAccount: vector-logs
@@ -141,7 +174,20 @@ spec:
             requests:
               cpu: 20m
               memory: 128Mi
+          ports:
+            - name: api
+              containerPort: 8686
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8686
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8686
           env:
+            - name: VECTOR_LOG
+              value: info
             - name: VECTOR_SELF_NODE_NAME
               valueFrom:
                 fieldRef:

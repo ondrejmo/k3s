@@ -62,7 +62,7 @@ k3s_longhorn:
   user: admin
   pass: admin
 
-# Vector.dev protocol
+# Vector.dev protocol, also there's a 4Gi disk buffer for each target
 k3s_log_targets:
   - host: logs.home.arpa
     port: "6000"

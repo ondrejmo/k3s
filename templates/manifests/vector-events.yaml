@@ -40,13 +40,25 @@ metadata:
   namespace: monitoring-system
 
 data:
-  agent.yml: |
+  vector-events.yml: |
     ---
 
+    timezone: Europe/Prague
+
+    data_dir: /var/lib/vector
+
     api:
-      enabled: false
+      address: 0.0.0.0:8686
+      playground: false
+      enabled: true
 
     sources:
+      metrics:
+        type: internal_metrics
+
+      logs:
+        type: internal_logs
+
       events:
         type: http_client
         endpoint: https://kubernetes.default.svc:443/api/v1/events
@@ -68,6 +80,22 @@ data:
         encoding: json
         strict_path: false
     transforms:
+      label_vector_logs:
+        type: remap
+        inputs: [ logs ]
+        source: |-
+          .tag = "vector"
+          .type = "vector-events"
+          .cluster = "{{ k3s_name }}"
+
+      label_vector_metrics:
+        type: remap
+        inputs: [ metrics ]
+        source: |-
+          .tags.job = "vector"
+          .tags.type = "vector-events"
+          .tags.cluster = "{{ k3s_name }}"
+
       split_events:
         type: remap
         inputs: [ events ]
@@ -99,9 +127,13 @@ data:
 {% for item in k3s_log_targets %}
       {{ item.host | replace(".", "__") }}:
         type: vector
-        inputs: [ label_events, label_hooks ]
+        inputs: [ label_vector_logs, label_vector_metrics, label_events, label_hooks ]
         address: {{ item.host }}:{{ item.port }}
         compression: true
+        buffer:
+          type: disk
+          max_size: 2147483648 # 2Gi
+          when_full: block
 {% if item.tls %}
         tls:
           enabled: true
@@ -151,6 +183,22 @@ roleRef:
 ---
 
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vector-events-buffer
+  namespace: monitoring-system
+
+spec:
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+
+apiVersion: v1
 kind: Service
 metadata:
   name: vector-events
@@ -164,6 +212,8 @@ spec:
   ports:
     - name: http
       port: 80
+    - name: api
+      port: 8686
 
 ---
 
@@ -175,7 +225,6 @@ metadata:
 
 spec:
   replicas: 1
-  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app.kubernetes.io/name: vector-events
@@ -183,6 +232,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: vector-events
+        # DISCLAIMER: logs are collected internally
+        vector.dev/exclude: "true"
     spec:
       serviceAccount: vector-events
       terminationGracePeriodSeconds: 60
@@ -208,15 +259,33 @@ spec:
               cpu: 20m
               memory: 128Mi
           env:
+            - name: VECTOR_LOG
+              value: info
             - name: KUBE_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: vector-events
                   key: token
+          ports:
+            - name: api
+              containerPort: 8686
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8686
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8686
           volumeMounts:
             - name: config
               mountPath: /etc/vector
+            - name: buffer
+              mountPath: /var/lib/vector
       volumes:
         - name: config
           configMap:
             name: vector-events-config
+        - name: buffer
+          persistentVolumeClaim:
+            claimName: vector-events-buffer
