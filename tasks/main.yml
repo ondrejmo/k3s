@@ -30,9 +30,6 @@
     - name: cilium
       url: "https://github.com/cilium/cilium-cli/releases/download/v{{ k3s_clis.cilium }}/cilium-linux-amd64.tar.gz"
       file: cilium
-    - name: flux
-      url: "https://github.com/fluxcd/flux2/releases/download/v{{ k3s_clis.flux }}/flux_{{ k3s_clis.flux }}_linux_amd64.tar.gz"
-      file: flux
     - name: helm
       url: "https://get.helm.sh/helm-v{{ k3s_clis.helm }}-linux-amd64.tar.gz"
       file: linux-amd64/helm
