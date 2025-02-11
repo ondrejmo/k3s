@@ -161,7 +161,42 @@ spec:
         - port: 9402
           protocol: TCP
 
-{% if k3s_ca.crt != "" and k3s_ca.key != "" %}
+{% if k3s_tls.external.email != "" and k3s_tls.external.token != "" %}
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token
+  namespace: cert-manager
+
+type: Opaque
+stringData:
+  token: {{ k3s_tls.external.token }}
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-ca
+
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: {{ k3s_tls.external.email }}
+    privateKeySecretRef:
+      name: cloudflare
+    solvers:
+      - dns01:
+          cloudflare:
+            email: {{ k3s_tls.external.email }}
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: token
+
+{% endif %}
+{% if k3s_tls.internal.crt != "" and k3s_tls.internal.key != "" %}
 ---
 
 apiVersion: v1
@@ -172,9 +207,9 @@ metadata:
 
 stringData:
   tls.crt: |
-    {{ k3s_ca.crt | indent(4) }}
+    {{ k3s_tls.internal.crt | indent(4) }}
   tls.key: |
-    {{ k3s_ca.key | indent(4) }}
+    {{ k3s_tls.internal.key | indent(4) }}
 
 ---
 
@@ -209,7 +244,7 @@ spec:
   sources:
     - useDefaultCAs: true
     - secret:
-        name: {{ "trusted-ca" if k3s_ca.crt != "" and k3s_ca.key != "" else "selfsigned-ca" }}
+        name: {{ "trusted-ca" if k3s_tls.internal.crt != "" and k3s_tls.internal.key != "" else "selfsigned-ca" }}
         key: tls.crt
   target:
     configMap:

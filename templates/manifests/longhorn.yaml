@@ -108,7 +108,7 @@ spec:
     - {{ k3s_longhorn.host }}
   secretName: longhorn-certificate
   issuerRef:
-    name: {{ "trusted-ca" if k3s_ca.crt != "" and k3s_ca.key != "" else "selfsigned-ca" }}
+    name: {{ "trusted-ca" if k3s_tls.internal.crt != "" and k3s_tls.internal.key != "" else "selfsigned-ca" }}
     kind: ClusterIssuer
 
 ---

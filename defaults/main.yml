@@ -40,9 +40,19 @@ k3s_firewall:
     - 192.168.0.0/16
 
 # Certifications authority that will be used to issue certs and include in TrustBundle (both cert and key as a multiline string)
-k3s_ca:
-  crt: ""
-  key: ""
+k3s_tls:
+  # External certification authority by Let's Encrypt
+  external:
+    # E-mail to CloudFlare account
+    email: ""
+    # API token to CloudFlare DNS zone
+    token: ""
+  # Internal certification authority
+  internal:
+    # Plaintext (or vaulted) CA certificate
+    crt: ""
+    # Vaulted (or plaintext) CA private key
+    key: ""
 
 # Host and credentials for RouterOS device with a DNS server
 k3s_dns:
