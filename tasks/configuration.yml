@@ -127,6 +127,8 @@
   loop:
     - src: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_components.prometheus_operator }}/stripped-down-crds.yaml"
       dst: "prometheus-operator-crds.yaml"
+    - src: "https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/refs/heads/release-{{ k3s_components.kube_prometheus }}/manifests/grafana-dashboardDefinitions.yaml"
+      dst: "dashboards.yaml"
 
 - name: add local manifests
   ansible.builtin.template:
