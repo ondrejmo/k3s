@@ -8,7 +8,7 @@ metadata:
 
 spec:
   chart: https://%{KUBERNETES_API}%/static/charts/trivy-operator-{{ k3s_components.trivy_operator }}.tgz
-  targetNamespace: trivy-system
+  targetNamespace: policy-system
   createNamespace: true
   # https://github.com/aquasecurity/trivy-operator/blob/main/deploy/helm/values.yaml
   valuesContent: |-
@@ -16,12 +16,14 @@ spec:
       metricsFindingsEnabled: true
       metricsVulnIdEnabled: true
       metricsExposedSecretInfo: true
+      exposedSecretScannerEnabled: true
       metricsConfigAuditInfo: true
       metricsRbacAssessmentInfo: true
       metricsInfraAssessmentInfo: true
       metricsImageInfo: true
       metricsClusterComplianceInfo: true
       scanJobsConcurrentLimit: 1
+      webhookBroadcastURL: http://vector-events.monitoring-system.svc/trivy
     trivy:
       command: rootfs
       resources:
@@ -54,7 +56,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: trivy-operator
-  namespace: trivy-system
+  namespace: policy-system
 
 spec:
   podSelector:

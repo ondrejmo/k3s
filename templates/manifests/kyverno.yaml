@@ -8,7 +8,7 @@ metadata:
 
 spec:
   chart: https://%{KUBERNETES_API}%/static/charts/kyverno-{{ k3s_components.kyverno }}.tgz
-  targetNamespace: kyverno-system
+  targetNamespace: policy-system
   createNamespace: true
   # https://github.com/kyverno/kyverno/blob/main/charts/kyverno/values.yaml
   valuesContent: |-
