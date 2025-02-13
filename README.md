@@ -4,6 +4,9 @@ This deploys a turnkey cluster, with all components, hardening and observability
 
 - Multiple non-HA clusters, because the primary goal of this role is efficiency and resiliciency (along with horizontal scaling), not high-availability.
 - Intel based nodes with core i3 gen 8 (or better / newer)
+  - One NIC
+  - Integrated GPU
+  - Two drives (NVMe, SATA)
 - Internal CA and local DNS, using RouterOS DNS
 - Log collector via Vector.dev protocol
 - Metric collector via remote write api
