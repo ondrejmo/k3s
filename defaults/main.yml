@@ -145,7 +145,7 @@ k3s_components:
   prometheus_operator: "0.80.1"
   traefik: "34.4.1" # chart version
   trivy_operator: "0.26.1" # chart version
-  trust_manager: "0.15.0"
+  trust_manager: "0.16.0"
   vector: "0.44.0"
 
 # Versions of CLI components
