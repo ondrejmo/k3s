@@ -137,7 +137,7 @@ k3s_components:
   kube_state_metrics: "2.15.0"
   kube_prometheus: "0.14" # just the dashboards
   kyverno: "3.3.6" # chart version
-  local_path_provisioner: "0.0.30"
+  local_path_provisioner: "0.0.31"
   longhorn: "1.8.0"
   node_exporter: "1.8.2"
   metrics_server: "0.7.2"
