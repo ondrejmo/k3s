@@ -9,7 +9,9 @@ spec:
   description: Deny all ingress by default
   endpointSelector: {}
   ingress:
-    - fromEndpoints: []
+    - fromEntities:
+        # DISCLAIMER: bypass for the webhookd on remote-node timeout
+        - remote-node
 
 ---
 
@@ -56,6 +58,7 @@ spec:
         - host
         - cluster
         - remote-node
+        - kube-apiserver
     - fromCIDR: {{ k3s_firewall.whitelist }}
       toPorts:
         - ports:
