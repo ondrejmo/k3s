@@ -49,6 +49,8 @@ k3s_tls:
     email: ""
     # API token to CloudFlare DNS zone
     token: ""
+    # DNS zone use for wilcard certificate
+    domain: ""
   # Internal certification authority
   internal:
     # Plaintext (or vaulted) CA certificate
@@ -62,17 +64,15 @@ k3s_dns:
   user: admin
   pass: admin
 
-# Domain and authentication for Hubble web interface
-k3s_hubble:
-  host: hubble.home.arpa
-  user: admin
-  pass: admin
-
-# Domain and authentication for Longhorn web interface
-k3s_longhorn:
-  host: longhorn.home.arpa
-  user: admin
-  pass: admin
+# Authentication for administration web interfaces
+k3s_auth:
+  # Basi authentication (will yield)
+  basic:
+    user: admin
+    pass: admin
+  # Forward authentication (has precedent)
+  forward:
+    url: ""
 
 # Vector.dev protocol, also there's a 4Gi disk buffer for each target
 k3s_log_targets:
