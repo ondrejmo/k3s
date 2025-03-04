@@ -18,6 +18,7 @@ stringData:
   MIKROTIK_USERNAME: "{{ k3s_dns.user }}"
   MIKROTIK_PASSWORD: "{{ k3s_dns.pass }}"
   MIKROTIK_SKIP_TLS_VERIFY: "false"
+  MIKROTIK_DEFAULT_TTL: "30"
   SERVER_HOST: "0.0.0.0"
   LOG_FORMAT: json
   LOG_LEVEL: info
@@ -170,7 +171,8 @@ spec:
             - --log-level=info
             - --log-format=text
             - --interval=15s
-            # --source=node
+            - --service-type-filter=LoadBalancer
+            - --source=node
             - --source=ingress
             - --source=service
             - --source=traefik-proxy
@@ -179,7 +181,9 @@ spec:
             - --policy=sync
             - --registry=txt
             - --txt-owner-id={{ k3s_name }}
-            - --domain-filter=home.arpa
+{% raw %}
+            - --fqdn-template={{.Name}}.home.arpa
+{% endraw %}
             - --provider=webhook
             - --traefik-disable-legacy
           securityContext:
@@ -265,3 +269,24 @@ spec:
   endpoints:
     - port: http
     - port: http-wh-metrics
+
+---
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-ingressroute-dns-target
+
+spec:
+  rules:
+    - name: add-external-dns-annotations
+      match:
+        any:
+          - resources:
+              kinds:
+                - IngressRoute
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            annotations:
+              +(external-dns.alpha.kubernetes.io/target): {{ k3s_loadbalancer.pools[0].start }}

@@ -19,7 +19,6 @@ metadata:
   namespace: default
   annotations:
     external-dns.alpha.kubernetes.io/target: "{{ k3s_loadbalancer.pools[0].start }}"
-    external-dns.alpha.kubernetes.io/ttl: "300"
 
 spec:
   entryPoints:
