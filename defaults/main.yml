@@ -128,7 +128,7 @@ k3s_flows:
 # Versions of all components
 k3s_components:
   cert_manager: "1.17.1"
-  cilium: "1.17.0"
+  cilium: "1.17.1"
   external_dns: "0.15.1"
   external_dns_mikrotik: "1.4.2"
   external_snapshotter: "8.2.0" # mandated by longhorn
