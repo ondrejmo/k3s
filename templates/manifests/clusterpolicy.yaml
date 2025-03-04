@@ -7,7 +7,6 @@ metadata:
   name: add-workload-defaults
 
 spec:
-  background: false
   rules:
     - name: add-revisionhistorylimit
       match:
@@ -35,6 +34,12 @@ spec:
           - resources:
               kinds:
                 - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                # prevent cyclic dependency
+                - cert-manager
       preconditions:
         all:
           - key: "{{ request.operation || 'BACKGROUND' }}"
@@ -57,6 +62,28 @@ spec:
                   - name: ca
                     configMap:
                       name: trusted-ca-bundle
+
+    # - name: mutate-emptydir
+    #   match:
+    #     any:
+    #     - resources:
+    #         kinds:
+    #         - Pod
+    #   mutate:
+    #     foreach:
+    #     - list: "request.object.spec.volumes[]"
+    #       preconditions:
+    #         all:
+    #         - key: "{{element.keys(@)}}"
+    #           operator: AnyIn
+    #           value: emptyDir
+    #         - key: "{{element.emptyDir.sizeLimit || ''}}"
+    #           operator: Equals
+    #           value: ''
+    #       patchesJson6902: |-
+    #         - path: "/spec/volumes/{{elementIndex}}/emptyDir/sizeLimit"
+    #           op: add
+    #           value: 100Mi
 
     - name: add-requests
       match:
@@ -89,7 +116,7 @@ spec:
 
 ---
 
-apiVersion: kyverno.io/v2beta1
+apiVersion: kyverno.io/v2
 kind: ClusterCleanupPolicy
 metadata:
   name: delete-old-pods
