@@ -322,7 +322,7 @@ spec:
       volumes:
         - name: tls-certificates
           secret:
-            secretName: admission-webhook-certs
+            secretName: admission-webhook-certificate
             items:
               - key: tls.crt
                 path: tls.crt
@@ -340,7 +340,7 @@ metadata:
 spec:
   dnsNames:
     - prometheus-operator-admission-webhook.monitoring-system.svc
-  secretName: admission-webhook-certs
+  secretName: admission-webhook-certificate
   issuerRef:
     name: selfsigned-ca
     kind: ClusterIssuer
