@@ -68,6 +68,8 @@ spec:
         memory: 128Mi
     service:
       spec:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: {{ k3s_name }}.home.arpa
         loadBalancerIP: "{{ k3s_loadbalancer.pools[0].start }}"
         externalTrafficPolicy: Local
         allocateLoadBalancerNodePorts: false

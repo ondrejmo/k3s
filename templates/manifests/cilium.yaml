@@ -168,8 +168,8 @@ metadata:
 
 type: kubernetes.io/basic-auth
 stringData:
-  username: "{{ k3s_hubble.user }}"
-  password: "{{ k3s_hubble.pass }}"
+  username: "{{ k3s_auth.basic.user }}"
+  password: "{{ k3s_auth.basic.pass }}"
 
 ---
 
@@ -192,9 +192,9 @@ metadata:
   namespace: kube-system
 
 spec:
-  commonName: {{ k3s_hubble.host }}
+  commonName: hubble.{{ k3s_name }}.home.arpa
   dnsNames:
-    - {{ k3s_hubble.host }}
+    - hubble.{{ k3s_name }}.home.arpa
   secretName: hubble-certificate
   issuerRef:
     name: {{ "trusted-ca" if k3s_tls.internal.crt != "" and k3s_tls.internal.key != "" else "selfsigned-ca" }}
@@ -221,15 +221,15 @@ metadata:
   name: hubble
   namespace: kube-system
   annotations:
+    # manually specify, because kyverno ignore */* in kube-system
     external-dns.alpha.kubernetes.io/target: "{{ k3s_loadbalancer.pools[0].start }}"
-    external-dns.alpha.kubernetes.io/ttl: "300"
 
 spec:
   entryPoints:
     - websecure
 
   routes:
-    - match: Host(`{{ k3s_hubble.host }}`)
+    - match: Host(`hubble.{{ k3s_name }}.home.arpa`)
       kind: Rule
       services:
         - name: hubble-ui

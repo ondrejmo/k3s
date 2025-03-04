@@ -91,8 +91,8 @@ metadata:
 
 type: kubernetes.io/basic-auth
 stringData:
-  username: "{{ k3s_longhorn.user }}"
-  password: "{{ k3s_longhorn.pass }}"
+  username: "{{ k3s_auth.basic.user }}"
+  password: "{{ k3s_auth.basic.pass }}"
 
 ---
 
@@ -103,9 +103,9 @@ metadata:
   namespace: longhorn-system
 
 spec:
-  commonName: {{ k3s_longhorn.host }}
+  commonName: longhorn.{{ k3s_name }}.home.arpa
   dnsNames:
-    - {{ k3s_longhorn.host }}
+    - longhorn.{{ k3s_name }}.home.arpa
   secretName: longhorn-certificate
   issuerRef:
     name: {{ "trusted-ca" if k3s_tls.internal.crt != "" and k3s_tls.internal.key != "" else "selfsigned-ca" }}
@@ -132,15 +132,15 @@ metadata:
   name: longhorn
   namespace: longhorn-system
   annotations:
+    # manually specify, because kyverno ignore */* in kube-system
     external-dns.alpha.kubernetes.io/target: "{{ k3s_loadbalancer.pools[0].start }}"
-    external-dns.alpha.kubernetes.io/ttl: "300"
 
 spec:
   entryPoints:
     - websecure
 
   routes:
-    - match: Host(`{{ k3s_longhorn.host }}`)
+    - match: Host(`longhorn.{{ k3s_name }}.home.arpa`)
       kind: Rule
       services:
         - name: longhorn-frontend
