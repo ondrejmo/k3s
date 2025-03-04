@@ -151,5 +151,5 @@ k3s_components:
 # Versions of CLI components
 k3s_clis:
   cilium: "0.18.0"
-  helm: "3.17.0"
+  helm: "3.17.1"
   hubble: "1.17.0"
