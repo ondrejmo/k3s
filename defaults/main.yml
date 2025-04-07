@@ -128,28 +128,28 @@ k3s_flows:
 # Versions of all components
 k3s_components:
   cert_manager: "1.17.1"
-  cilium: "1.17.1"
-  external_dns: "0.15.1"
-  external_dns_mikrotik: "1.4.3"
+  cilium: "1.17.2"
+  external_dns: "0.16.1"
+  external_dns_mikrotik: "1.4.4"
   external_snapshotter: "8.2.0" # mandated by longhorn
-  intel_gpu: "0.30.0"
-  k3s: "1.31.6+k3s1"
+  intel_gpu: "0.32.0"
+  k3s: "1.31.7+k3s1"
   kube_state_metrics: "2.15.0"
   kube_prometheus: "0.14" # just the dashboards
   kyverno: "3.3.6" # chart version
   local_path_provisioner: "0.0.31"
-  longhorn: "1.8.0"
-  node_exporter: "1.9.0"
+  longhorn: "1.8.1"
+  node_exporter: "1.9.1"
   metrics_server: "0.7.2"
   prometheus: "3.2.1"
-  prometheus_operator: "0.80.1"
-  traefik: "34.4.1" # chart version
-  trivy_operator: "0.26.1" # chart version
+  prometheus_operator: "0.81.0"
+  traefik: "35.0.0" # chart version
+  trivy_operator: "0.27.0" # chart version
   trust_manager: "0.16.0"
   vector: "0.45.0"
 
 # Versions of CLI components
 k3s_clis:
-  cilium: "0.18.0"
-  helm: "3.17.1"
-  hubble: "1.17.1"
+  cilium: "0.18.3"
+  helm: "3.17.2"
+  hubble: "1.17.2"

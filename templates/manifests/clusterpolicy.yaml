@@ -63,27 +63,27 @@ spec:
                     configMap:
                       name: trusted-ca-bundle
 
-    # - name: mutate-emptydir
-    #   match:
-    #     any:
-    #     - resources:
-    #         kinds:
-    #         - Pod
-    #   mutate:
-    #     foreach:
-    #     - list: "request.object.spec.volumes[]"
-    #       preconditions:
-    #         all:
-    #         - key: "{{element.keys(@)}}"
-    #           operator: AnyIn
-    #           value: emptyDir
-    #         - key: "{{element.emptyDir.sizeLimit || ''}}"
-    #           operator: Equals
-    #           value: ''
-    #       patchesJson6902: |-
-    #         - path: "/spec/volumes/{{elementIndex}}/emptyDir/sizeLimit"
-    #           op: add
-    #           value: 100Mi
+    - name: add-emptydir-limit
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      mutate:
+        foreach:
+          - list: "request.object.spec.volumes[]"
+            preconditions:
+              all:
+                - key: "{{ element.keys(@) }}"
+                  operator: AnyIn
+                  value: emptyDir
+                - key: "{{ element.emptyDir.sizeLimit || '' }}"
+                  operator: Equals
+                  value: ""
+            patchesJson6902: |-
+              - path: "/spec/volumes/{{ elementIndex }}/emptyDir/sizeLimit"
+                op: add
+                value: 1Gi
 
     - name: add-requests
       match:
