@@ -127,7 +127,7 @@ k3s_flows:
 
 # Versions of all components
 k3s_components:
-  cert_manager: "1.17.1"
+  cert_manager: "1.17.2"
   cilium: "1.17.3"
   external_dns: "0.16.1"
   external_dns_mikrotik: "1.4.4"
