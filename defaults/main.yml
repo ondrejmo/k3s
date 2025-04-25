@@ -130,7 +130,7 @@ k3s_components:
   cert_manager: "1.17.2"
   cilium: "1.17.3"
   external_dns: "0.16.1"
-  external_dns_mikrotik: "1.4.4"
+  external_dns_mikrotik: "1.4.6"
   external_snapshotter: "8.2.0" # mandated by longhorn
   intel_gpu: "0.32.0"
   k3s: "1.31.7+k3s1"
