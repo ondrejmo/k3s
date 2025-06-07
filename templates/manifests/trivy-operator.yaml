@@ -16,7 +16,6 @@ spec:
       metricsFindingsEnabled: true
       metricsVulnIdEnabled: true
       metricsExposedSecretInfo: true
-      exposedSecretScannerEnabled: true
       metricsConfigAuditInfo: true
       metricsRbacAssessmentInfo: true
       metricsInfraAssessmentInfo: true
@@ -24,6 +23,8 @@ spec:
       metricsClusterComplianceInfo: true
       scanJobsConcurrentLimit: 1
       webhookBroadcastURL: http://vector-events.monitoring-system.svc/trivy
+      infraAssessmentScannerEnabled: true
+      exposedSecretScannerEnabled: true
     trivy:
       command: rootfs
       resources:
@@ -36,11 +37,11 @@ spec:
     trivyOperator:
       skipResourceByLabels: trivy.io/skip
       scanJobPodTemplateContainerSecurityContext:
-        allowPrivilegeEscalation: false
+        allowPrivilegeEscalation: true # default is false
         capabilities:
           drop:
             - ALL
-        privileged: false
+        privileged: true # default is false
         readOnlyRootFilesystem: true
         runAsUser: 0
     serviceMonitor:
