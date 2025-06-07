@@ -11,7 +11,9 @@ spec:
   targetNamespace: kube-system
   # https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
   valuesContent: |-
-    globalArguments: []
+    global:
+      sendAnonymousUsage: false
+      checkNewVersion: false
     priorityClassName: "system-cluster-critical"
     providers:
       kubernetesIngress:
