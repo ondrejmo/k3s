@@ -142,7 +142,7 @@ k3s_components:
   node_exporter: "1.9.1"
   metrics_server: "0.7.2"
   prometheus: "3.4.0"
-  prometheus_operator: "0.82.2"
+  prometheus_operator: "0.83.0"
   traefik: "36.0.0" # chart version
   trivy_operator: "0.28.1" # chart version
   trust_manager: "0.17.1"
