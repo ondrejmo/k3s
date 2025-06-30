@@ -271,6 +271,18 @@ spec:
     - "{{ ad.iface }}"
 
 {% endfor %}
+---
+
+apiVersion: cilium.io/v2alpha1
+kind: CiliumCIDRGroup
+metadata:
+  name: lan
+
+spec:
+  externalCIDRs:
+{% for cidr in k3s_firewall.whitelist %}
+    - {{ cidr }}
+{% endfor %}
 {% raw %}
 ---
 
