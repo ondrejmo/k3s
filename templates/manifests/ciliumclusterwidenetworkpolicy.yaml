@@ -48,7 +48,7 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: intercept-all-dns
+  name: default-allow-dns # allow ~ intercept
 
 spec:
   endpointSelector:
