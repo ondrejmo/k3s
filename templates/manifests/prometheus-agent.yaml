@@ -158,7 +158,7 @@ spec:
 
   initContainers:
     - name: init-config-reloader
-      securityContext:
+      securityContext: &context
         allowPrivilegeEscalation: false
         seccompProfile:
           type: RuntimeDefault
@@ -168,21 +168,9 @@ spec:
 
   containers:
     - name: prometheus
-      securityContext:
-        allowPrivilegeEscalation: false
-        seccompProfile:
-          type: RuntimeDefault
-        capabilities:
-          drop:
-            - ALL
+      securityContext: *context
     - name: config-reloader
-      securityContext:
-        allowPrivilegeEscalation: false
-        seccompProfile:
-          type: RuntimeDefault
-        capabilities:
-          drop:
-            - ALL
+      securityContext: *context
 
   resources:
     requests:

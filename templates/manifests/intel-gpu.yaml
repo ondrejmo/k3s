@@ -18,7 +18,7 @@ spec:
       initContainers:
         - name: intel-gpu-init
           image: intel/intel-gpu-initcontainer:{{ k3s_components.intel_gpu }}
-          securityContext:
+          securityContext: &context
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
           resources:
@@ -34,9 +34,7 @@ spec:
           args:
             - -shared-dev-num=4
             - -enable-monitoring
-          securityContext:
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
+          securityContext: *context
           resources:
             requests:
               cpu: 5m
