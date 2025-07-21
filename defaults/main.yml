@@ -122,6 +122,8 @@ k3s_flows:
             - DROPPED
             - ERROR
             - AUDIT
+        - protocol:
+            - DNS
       excludeFilters: []
       filePath: "/var/run/cilium/hubble/events.log"
 
