@@ -140,7 +140,7 @@ k3s_components:
   local_path_provisioner: "0.0.31"
   longhorn: "1.9.0"
   node_exporter: "1.9.1"
-  metrics_server: "0.7.2"
+  metrics_server: "0.8.0"
   prometheus: "3.4.2"
   prometheus_operator: "0.83.0"
   traefik: "36.2.0" # chart version

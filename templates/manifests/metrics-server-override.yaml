@@ -60,6 +60,12 @@ metadata:
 
 rules:
   - apiGroups:
+      - ""
+    resources:
+      - nodes/metrics
+    verbs:
+      - get
+  - apiGroups:
       - metrics.k8s.io
     resources:
       - pods
@@ -176,7 +182,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: metrics-server
-          image: rancher/mirrored-metrics-server:v{{ k3s_components.metrics_server }}
+          image: gcr.io/k8s-staging-metrics-server/metrics-server:v{{ k3s_components.metrics_server }}
           args:
             - --cert-dir=/tmp
             - --secure-port=10250
@@ -185,10 +191,15 @@ spec:
             - --metric-resolution=15s
             - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
           securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 1000
-            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
           resources:
             requests:
               cpu: 10m
