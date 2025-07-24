@@ -92,3 +92,51 @@ spec:
           targetLabel: metrics_path
 
 # DISCLAIMER: k3s has all kubenernetes metrics on all endpoints, it makes sense, to scrape them only once, from kubelet (https://github.com/k3s-io/k3s/issues/3619)
+
+---
+
+# DISCLAIMER: wilcard certificate and dns record are used so that all domain names do not leak to public
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: letsencrypt
+  namespace: kube-system
+
+spec:
+  commonName: "{{ k3s_tls.external.domain }}"
+  dnsNames:
+    - "{{ k3s_tls.external.domain }}"
+    - "*.{{ k3s_tls.external.domain }}"
+  secretName: letsencrypt-certificate
+  issuerRef:
+    name: letsencrypt-ca
+    kind: ClusterIssuer
+{% raw %}
+---
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-letsencrypt-certificate
+
+spec:
+  rules:
+    - name: add-secret
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      generate:
+        generateExisting: true
+        synchronize: true
+        apiVersion: v1
+        kind: Secret
+        name: letsencrypt-certificate
+        namespace: "{{ request.object.metadata.name }}"
+        clone:
+          name: letsencrypt-certificate
+          namespace: kube-system
+
+{% endraw %}
