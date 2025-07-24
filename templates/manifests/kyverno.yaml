@@ -25,22 +25,22 @@ spec:
     #       configMap:
     #         name: trusted-ca-bundle
     admissionController:
-      networkpolicy:
+      networkPolicy:
         enabled: true
       serviceMonitor:
         enabled: true
     backgroundController:
-      networkpolicy:
+      networkPolicy:
         enabled: true
       serviceMonitor:
         enabled: true
     cleanupController:
-      networkpolicy:
+      networkPolicy:
         enabled: true
       serviceMonitor:
         enabled: true
     reportsController:
-      networkpolicy:
+      networkPolicy:
         enabled: true
       serviceMonitor:
         enabled: true
