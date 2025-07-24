@@ -26,6 +26,8 @@ spec:
       infraAssessmentScannerEnabled: true
       exposedSecretScannerEnabled: true
     trivy:
+      useEmbeddedRegoPolicies: true
+      useBuiltinRegoPolicies: true
       command: rootfs
       resources:
         requests:
@@ -53,54 +55,33 @@ spec:
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
-  name: trivy-operator
+  name: trivy
   namespace: policy-system
 
 spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: trivy-operator
-  policyTypes:
-    - Egress
-    - Ingress
+  endpointSelector: {}
   egress:
-    - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-            except:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
-      ports:
-        - protocol: TCP
-          port: 443
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring-system
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: vector-events
-      ports:
-        - protocol: TCP
-          port: 80
-    - from:
-        - namespaceSelector: {}
-      ports:
-        - protocol: TCP
-          port: 6443
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:app.kubernetes.io/name: vector-events
+            k8s:io.kubernetes.pod.namespace: monitoring-system
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+    - toEntities:
+        - kube-apiserver
+  ingress: []
