@@ -140,7 +140,7 @@ k3s_components:
   kube_prometheus: "0.15" # just the dashboards
   kyverno: "3.4.4" # chart version
   local_path_provisioner: "0.0.31"
-  longhorn: "1.9.0"
+  longhorn: "1.9.1"
   node_exporter: "1.9.1"
   metrics_server: "0.8.0"
   prometheus: "3.5.0"
