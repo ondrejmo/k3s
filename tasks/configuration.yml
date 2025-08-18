@@ -74,6 +74,14 @@
   notify:
     - apply sysctl
 
+- name: add nerdctl configuration
+  ansible.builtin.copy:
+    src: nerdctl.toml
+    dest: /etc/nerdctl/nerdctl.toml
+    mode: "0600"
+    owner: root
+    group: root
+
 - name: add helm charts
   ansible.builtin.get_url:
     url: "{{ item.src }}"

@@ -1,19 +1,23 @@
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
   name: metrics-server
   namespace: kube-system
 
 spec:
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: metrics-server
-  policyTypes:
-    - Ingress
+      k8s:app.kubernetes.io/name: metrics-server
   ingress:
-    - {}
+    - fromEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
 
 ---
 
@@ -182,7 +186,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: metrics-server
-          image: gcr.io/k8s-staging-metrics-server/metrics-server:v{{ k3s_components.metrics_server }}
+          image: registry.k8s.io/metrics-server/metrics-server:v{{ k3s_components.metrics_server }}
           args:
             - --cert-dir=/tmp
             - --secure-port=10250

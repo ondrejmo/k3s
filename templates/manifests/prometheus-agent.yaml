@@ -1,3 +1,19 @@
+---
+
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: prometheus-agent-l7
+  namespace: monitoring-system
+
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: prometheus-agent
+  egress:
+    - toCIDRSet:
+        - cidrGroupRef: lan
+
 {% for item in k3s_metric_targets %}
 ---
 

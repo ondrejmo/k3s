@@ -7,6 +7,22 @@ metadata:
 
 ---
 
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: external-dns
+  namespace: external-dns
+
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: external-dns
+  egress:
+    - toCIDRSet:
+        - cidrGroupRef: lan
+
+---
+
 apiVersion: v1
 kind: Secret
 metadata:

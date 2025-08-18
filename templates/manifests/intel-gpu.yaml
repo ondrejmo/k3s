@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
         - name: intel-gpu-init
-          image: intel/intel-gpu-initcontainer:{{ k3s_components.intel_gpu }}
+          image: docker.io/intel/intel-gpu-initcontainer:{{ k3s_components.intel_gpu }}
           securityContext: &context
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
@@ -30,7 +30,7 @@ spec:
               mountPath: /etc/kubernetes/node-feature-discovery/source.d/
       containers:
         - name: intel-gpu-plugin
-          image: intel/intel-gpu-plugin:{{ k3s_components.intel_gpu }}
+          image: docker.io/intel/intel-gpu-plugin:{{ k3s_components.intel_gpu }}
           args:
             - -shared-dev-num=4
             - -enable-monitoring

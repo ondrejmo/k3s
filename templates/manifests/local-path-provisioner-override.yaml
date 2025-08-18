@@ -152,7 +152,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: local-path-provisioner
-          image: rancher/local-path-provisioner:v{{ k3s_components.local_path_provisioner }}
+          image: docker.io/rancher/local-path-provisioner:v{{ k3s_components.local_path_provisioner }}
           command:
             - local-path-provisioner
             - start

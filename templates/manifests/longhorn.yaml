@@ -56,30 +56,45 @@ spec:
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
-  name: longhorn-ui
+  name: longhorn
+  namespace: longhorn-system
+
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: longhorn
+  egress:
+    - toCIDRSet:
+        - cidrGroupRef: lan
+
+---
+
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-ui # -l7
   namespace: longhorn-system
 
 # DISCLAIMER: longhorn chart does not add ui networkpolicy when ingress is disabled
 spec:
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app: longhorn-ui
-  policyTypes:
-    - Ingress
+      k8s:app: longhorn-ui
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: traefik
-      ports:
-        - port: 8000
-          protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+          # TODO: https://github.com/cilium/cilium/issues/11672
+          # rules:
+          #   http: [{}]
 
 ---
 

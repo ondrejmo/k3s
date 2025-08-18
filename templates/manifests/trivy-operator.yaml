@@ -58,12 +58,15 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: trivy
+  name: trivy-operator
   namespace: policy-system
 
 spec:
-  endpointSelector: {}
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: trivy-operator
   egress:
+    # Internet
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:
@@ -72,16 +75,33 @@ spec:
             - 192.168.0.0/16
       toPorts:
         - ports:
+            - port: "80"
+              protocol: TCP
             - port: "443"
               protocol: TCP
-    - toEndpoints:
-        - matchLabels:
-            k8s:app.kubernetes.io/name: vector-events
-            k8s:io.kubernetes.pod.namespace: monitoring-system
+
+---
+
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: trivy-scans
+  namespace: policy-system
+
+spec:
+  endpointSelector:
+    k8s:app.kubernetes.io/managed-by: trivy-operator
+  egress:
+    # Internet
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
       toPorts:
         - ports:
             - port: "80"
               protocol: TCP
-    - toEntities:
-        - kube-apiserver
-  ingress: []
+            - port: "443"
+              protocol: TCP

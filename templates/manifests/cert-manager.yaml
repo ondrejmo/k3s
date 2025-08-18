@@ -71,70 +71,65 @@ spec:
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
   name: cert-manager
   namespace: cert-manager
 
 spec:
-  policyTypes:
-    - Ingress
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: cert-manager
-  ingress:
-    - from:
-        - namespaceSelector: {}
-      ports:
-        - port: 9402
-          protocol: TCP
-        - port: 9403
-          protocol: TCP
+      k8s:app.kubernetes.io/name: cert-manager
+  egress:
+    - toFQDNs:
+        - matchName: acme-v02.api.letsencrypt.org
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
   name: cert-manager-webhook
   namespace: cert-manager
 
 spec:
-  policyTypes:
-    - Ingress
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: webhook
+      k8s:app.kubernetes.io/name: webhook
   ingress:
-    - from:
-        - namespaceSelector: {}
-      ports:
-        - port: 6080
-          protocol: TCP
-        - port: 10250
-          protocol: TCP
+    - fromEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "10250"
+              protocol: TCP
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
   name: trust-manager
   namespace: cert-manager
 
 spec:
-  policyTypes:
-    - Ingress
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: trust-manager
+      k8s:app.kubernetes.io/name: trust-manager
   ingress:
-    - from:
-        - namespaceSelector: {}
-      ports:
-        - port: 6443
-          protocol: TCP
+    - fromEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
 
 ---
 

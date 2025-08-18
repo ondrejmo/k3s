@@ -3,22 +3,25 @@
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: default-deny-all-ingress
+  name: default-pods
 
 spec:
-  description: Deny all ingress by default
+  description: Deny by default
   endpointSelector: {}
+  egress:
+    - toEntities:
+        - cluster
   ingress:
     - fromEntities:
-        # DISCLAIMER: bypass for the webhookd on remote-node timeout
         - remote-node
+        - host
 
 ---
 
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: default-allow-prometheus-agent
+  name: default-allow-prometheus-agent-ingress
 
 spec:
   description: Allow all ingress traffic from prometheus-agent
@@ -29,37 +32,21 @@ spec:
             io.kubernetes.pod.namespace: monitoring-system
             app.kubernetes.io/name: prometheus-agent
 
-# ---
-
-# apiVersion: cilium.io/v2
-# kind: CiliumClusterwideNetworkPolicy
-# metadata:
-#   name: default-deny-egress-world
-
-# spec:
-#   description: Deny allow egress traffic to world (unless explicitly allowed)
-#   endpointSelector: {}
-#   egress:
-#     - toEntities:
-#         - world
-
 ---
 
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: default-allow-dns # allow ~ intercept
+  name: default-allow-dns-egress # and intercept
 
 spec:
+  description: Intercept all egress DNS traffic from pods
   endpointSelector:
     matchExpressions:
       - key: io.kubernetes.pod.namespace
         operator: NotIn
         values:
           - kube-system
-  enableDefaultDeny:
-    egress: false
-    ingress: false
   egress:
     - toEndpoints:
         - matchLabels:
@@ -80,11 +67,15 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
-  name: default-node-ingress
+  name: default-nodes
 
 spec:
+  description: Allow traffic among cluster nodes and SSH, NFS from outside
   nodeSelector:
     matchLabels: {}
+  egress:
+    - toEntities:
+        - all
   ingress:
     - fromEntities:
         - host
@@ -101,4 +92,17 @@ spec:
             - port: "2049"
               protocol: TCP
     - fromCIDR: {{ k3s_firewall.whitelist }}
-      icmps: [{}]
+      icmps:
+      - fields:
+          - type: EchoRequest
+            family: IPv4
+          - type: EchoReply
+            family: IPv4
+          - type: DestinationUnreachable
+            family: IPv4
+          - type: TimeExceeded
+            family: IPv4
+          - type: ParameterProblem
+            family: IPv4
+          - type: Redirect
+            family: IPv4

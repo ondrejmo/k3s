@@ -1,5 +1,21 @@
 ---
 
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vector-logs-l7
+  namespace: monitoring-system
+
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s:app.kubernetes.io/name: vector-logs
+  egress:
+    - toCIDRSet:
+        - cidrGroupRef: lan
+
+---
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -165,7 +181,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: vector
-          image: timberio/vector:{{ k3s_components.vector }}-debian
+          image: ghcr.io/vectordotdev/vector:{{ k3s_components.vector }}-debian
           args:
             - -w
             - --config-dir

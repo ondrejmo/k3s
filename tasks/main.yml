@@ -13,6 +13,7 @@
     - /var/lib/rancher/k3s/server/static/charts
     - /etc/rancher/k3s/clis
     - /etc/rancher/k3s
+    - /etc/nerdctl
 
 - name: check k3s is installed
   ansible.builtin.command: k3s --version
@@ -30,12 +31,18 @@
     - name: cilium
       url: "https://github.com/cilium/cilium-cli/releases/download/v{{ k3s_clis.cilium }}/cilium-linux-amd64.tar.gz"
       file: cilium
+    - name: etcdctl
+      url: "https://github.com/etcd-io/etcd/releases/download/v{{ k3s_clis.etcdctl }}/etcd-v{{ k3s_clis.etcdctl }}-linux-amd64.tar.gz"
+      file: etcd-v{{ k3s_clis.etcdctl }}-linux-amd64/etcdctl
     - name: helm
       url: "https://get.helm.sh/helm-v{{ k3s_clis.helm }}-linux-amd64.tar.gz"
       file: linux-amd64/helm
     - name: hubble
       url: "https://github.com/cilium/hubble/releases/download/v{{ k3s_clis.hubble }}/hubble-linux-amd64.tar.gz"
       file: hubble
+    - name: nerdctl
+      url: "https://github.com/containerd/nerdctl/releases/download/v{{ k3s_clis.nerdctl }}/nerdctl-{{ k3s_clis.nerdctl }}-linux-amd64.tar.gz"
+      file: nerdctl
 
 - name: add additional configuration
   ansible.builtin.import_tasks: configuration.yml

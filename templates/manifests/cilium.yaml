@@ -19,9 +19,11 @@ spec:
     localRedirectPolicy: true
     kubeProxyReplacement: true
     policyAuditMode: {{ k3s_firewall.auditmode }}
-    policyEnforcementMode: default
+    policyEnforcementMode: always
     routingMode: tunnel
     tunnelProtocol: geneve
+    cluster:
+      name: {{ k3s_name }}
     loadbalancer:
       mode: dsr
       dsrDispatch: geneve
@@ -60,15 +62,17 @@ spec:
             configMapName: cilium-export-config
             createConfigMap: false
       metrics:
+        # https://docs.cilium.io/en/stable/observability/metrics/#hubble-context-options
         enabled:
-          - dns
-          - drop
-          - flow
-          - flows-to-world
-          - httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction
-          - icmp
-          - port-distribution
-          - tcp
+          - dns:query;labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - drop:labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - flow:labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - flows-to-world:port;labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - httpV2:exemplars=true;labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - icmp:labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - port-distribution:labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - kafka:labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
+          - tcp:labelsContext=source_ip,source_pod,source_app,source_namespace,source_workload,source_workload_kind,destination_ip,destination_pod,destination_app,destination_namespace,destination_workload,destination_workload_kind,traffic_direction
         enableOpenMetrics: true
         serviceMonitor:
           enabled: true
@@ -117,46 +121,44 @@ spec:
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
   name: cilium
   namespace: kube-system
 
 spec:
-  podSelector:
+  endpointSelector:
     matchLabels:
       app.kubernetes.io/part-of: cilium
-  policyTypes:
-    - Ingress
   ingress:
-    - {}
+    - fromEntities:
+        - cluster
 
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
-  name: hubble
+  name: hubble-ui # -l7
   namespace: kube-system
 
 spec:
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: hubble-ui
-  policyTypes:
-    - Ingress
+      k8s:app.kubernetes.io/name: hubble-ui
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: traefik
-      ports:
-        - protocol: TCP
-          port: 80
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+          # TODO: https://github.com/cilium/cilium/issues/11672
+          # rules:
+          #   http: [{}]
 
 ---
 

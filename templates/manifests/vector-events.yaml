@@ -1,23 +1,27 @@
 ---
 
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
 metadata:
-  name: vector-events
+  name: vector-events-l7
   namespace: monitoring-system
 
 spec:
-  podSelector:
+  endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: vector-events
-  policyTypes:
-    - Ingress
+      k8s:app.kubernetes.io/name: vector-events
+  egress:
+    - toCIDRSet:
+        - cidrGroupRef: lan
   ingress:
-    - from:
-        - namespaceSelector: {}
-      ports:
-        - protocol: TCP
-          port: 80
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+          rules:
+            http: [{}]
 
 ---
 
@@ -241,7 +245,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: vector
-          image: timberio/vector:{{ k3s_components.vector }}-debian
+          image: ghcr.io/vectordotdev/vector:{{ k3s_components.vector }}-debian
           args:
             - -w
             - --config-dir
