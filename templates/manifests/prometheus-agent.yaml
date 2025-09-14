@@ -163,6 +163,12 @@ spec:
           configMap:
             name: trusted-ca-bundle
             key: ca-certificates.crt
+      # DISCLAIMER: decrease the amount of remote-write POST requests
+      # https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
+      queueConfig:
+        capacity: 500000 # 50x
+        maxSamplesPerSend: 50000 # 50x
+        batchSendDeadline: 10s # 2x
 {% endfor %}
 
   securityContext:

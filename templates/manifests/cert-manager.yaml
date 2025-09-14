@@ -8,8 +8,7 @@ metadata:
 
 spec:
   chart: https://%{KUBERNETES_API}%/static/charts/cert-manager-{{ k3s_components.cert_manager }}.tgz
-  targetNamespace: cert-manager
-  createNamespace: true
+  targetNamespace: ingress-system
   # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
   valuesContent: |-
     fullnameOverride: cert-manager
@@ -48,8 +47,7 @@ metadata:
 
 spec:
   chart: https://%{KUBERNETES_API}%/static/charts/trust-manager-{{ k3s_components.trust_manager }}.tgz
-  targetNamespace: cert-manager
-  createNamespace: true
+  targetNamespace: ingress-system
   # https://github.com/cert-manager/trust-manager/blob/main/deploy/charts/trust-manager/values.yaml
   valuesContent: |-
     app:
@@ -58,6 +56,8 @@ spec:
           enabled: true
           servicemonitor:
             enabled: true
+      trust:
+        namespace: ingress-system
     resources:
       requests:
         cpu: 5m
@@ -75,7 +75,7 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: cert-manager
-  namespace: cert-manager
+  namespace: ingress-system
 
 spec:
   endpointSelector:
@@ -95,7 +95,7 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: cert-manager-webhook
-  namespace: cert-manager
+  namespace: ingress-system
 
 spec:
   endpointSelector:
@@ -116,7 +116,7 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: trust-manager
-  namespace: cert-manager
+  namespace: ingress-system
 
 spec:
   endpointSelector:
@@ -167,7 +167,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cloudflare-api-token
-  namespace: cert-manager
+  namespace: ingress-system
 
 type: Opaque
 stringData:
@@ -198,6 +198,53 @@ spec:
           - "{{ k3s_tls.external.domain }}"
           - "*.{{ k3s_tls.external.domain }}"
 
+---
+
+# DISCLAIMER: wildcard certificate and dns record are used so that all domain names do not leak to public
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: letsencrypt
+  namespace: ingress-system
+
+spec:
+  commonName: "{{ k3s_tls.external.domain }}"
+  dnsNames:
+    - "{{ k3s_tls.external.domain }}"
+    - "*.{{ k3s_tls.external.domain }}"
+  secretName: letsencrypt-certificate
+  issuerRef:
+    name: letsencrypt-ca
+    kind: ClusterIssuer
+{% raw %}
+---
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-letsencrypt-certificate
+
+spec:
+  rules:
+    - name: add-secret
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      generate:
+        generateExisting: true
+        synchronize: true
+        apiVersion: v1
+        kind: Secret
+        name: letsencrypt-certificate
+        namespace: "{{ request.object.metadata.name }}"
+        clone:
+          name: letsencrypt-certificate
+          namespace: ingress-system
+
+{% endraw %}
 {% endif %}
 {% if k3s_tls.internal.crt != "" and k3s_tls.internal.key != "" %}
 ---
@@ -206,7 +253,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: trusted-ca
-  namespace: cert-manager
+  namespace: ingress-system
 
 stringData:
   tls.crt: |

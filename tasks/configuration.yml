@@ -64,6 +64,20 @@
   notify:
     - restart k3s
 
+# TODO: only on the first node if not HA
+# TODO: how does this interact with prune?
+
+# Docs: https://docs.k3s.io/import-images?import-images=Offline+image+importing#pre-import-images
+# Sources:
+#   - https://raw.githubusercontent.com/longhorn/longhorn/v1.9.1/deploy/longhorn-images.txt
+# name: add image import
+# ansible.builtin.template:
+#   src: images.txt
+#   dest: /var/lib/rancher/k3s/agent/images/images.txt
+#   mode: "0600"
+#   owner: root
+#   group: root
+
 - name: add sysctl hardening
   ansible.builtin.copy:
     src: 90-kubelet.conf
@@ -134,9 +148,11 @@
     - k3s_role == 'server'
   loop:
     - src: "https://github.com/prometheus-operator/prometheus-operator/releases/download/v{{ k3s_components.prometheus_operator }}/stripped-down-crds.yaml"
-      dst: "prometheus-operator-crds.yaml"
+      dst: prometheus-operator-crds.yaml
     - src: "https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/refs/heads/release-{{ k3s_components.kube_prometheus }}/manifests/grafana-dashboardDefinitions.yaml"
-      dst: "dashboards.yaml"
+      dst: dashboards.yaml
+    - src: "https://raw.githubusercontent.com/kubernetes-sigs/external-dns/refs/tags/v{{ k3s_components.external_dns }}/charts/external-dns/crds/dnsendpoints.externaldns.k8s.io.yaml"
+      dst: external-dns-crds.yaml
 
 - name: add local manifests
   ansible.builtin.template:

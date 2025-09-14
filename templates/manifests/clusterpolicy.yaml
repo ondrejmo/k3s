@@ -39,7 +39,10 @@ spec:
           - resources:
               namespaces:
                 # prevent cyclic dependency
-                - cert-manager
+                - ingress-system
+              names:
+                - cert-manager-*
+                - trust-manager-*
       preconditions:
         all:
           - key: "{{ request.operation || 'BACKGROUND' }}"

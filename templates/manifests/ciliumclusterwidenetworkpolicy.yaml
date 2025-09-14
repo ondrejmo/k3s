@@ -50,7 +50,7 @@ spec:
   egress:
     - toEndpoints:
         - matchLabels:
-            io.kubernetes.pod.namespace: kube-system
+            io.kubernetes.pod.namespace: ingress-system
             k8s-app: kube-dns
       toPorts:
         - ports:

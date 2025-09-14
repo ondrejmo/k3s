@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: external-dns
+  name: ingress-system
 
 ---
 
@@ -11,7 +11,7 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: external-dns
-  namespace: external-dns
+  namespace: ingress-system
 
 spec:
   endpointSelector:
@@ -27,7 +27,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: external-dns-mikrotik
-  namespace: external-dns
+  namespace: ingress-system
 
 stringData:
   MIKROTIK_BASEURL: "{{ k3s_dns.url }}"
@@ -45,7 +45,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: external-dns
-  namespace: external-dns
+  namespace: ingress-system
 
 ---
 
@@ -123,6 +123,20 @@ rules:
       - get
       - watch
       - list
+  - apiGroups:
+      - externaldns.k8s.io
+    resources:
+      - dnsendpoints
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - externaldns.k8s.io
+    resources:
+      - dnsendpoints/status
+    verbs:
+      - "*"
 
 ---
 
@@ -138,7 +152,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: external-dns
-    namespace: external-dns
+    namespace: ingress-system
 
 ---
 
@@ -146,7 +160,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: external-dns
-  namespace: external-dns
+  namespace: ingress-system
   labels:
     app.kubernetes.io/name: external-dns
 
@@ -167,7 +181,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: external-dns
-  namespace: external-dns
+  namespace: ingress-system
 
 spec:
   replicas: 1
@@ -201,6 +215,7 @@ spec:
             - --source=traefik-proxy
             - --source=gateway-httproute
             - --source=gateway-grpcroute
+            - --source=crd
             - --policy=sync
             - --registry=txt
             - --txt-owner-id={{ k3s_name }}
@@ -208,7 +223,7 @@ spec:
             - --fqdn-template={{.Name}}.home.arpa
 {% endraw %}
             - --provider=webhook
-            - --traefik-disable-legacy
+            - --webhook-provider-url=http://127.0.0.1:8888
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -283,7 +298,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: external-dns
-  namespace: external-dns
+  namespace: ingress-system
 
 spec:
   selector:

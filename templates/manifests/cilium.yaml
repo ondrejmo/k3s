@@ -150,7 +150,7 @@ spec:
   ingress:
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:io.kubernetes.pod.namespace: ingress-system
             k8s:app.kubernetes.io/name: traefik
       toPorts:
         - ports:
