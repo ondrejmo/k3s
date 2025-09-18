@@ -117,6 +117,22 @@ spec:
                       - name: TZ
                         value: Europe/Prague
 
+    - name: add-timezone
+      match:
+        any:
+          - resources:
+              kinds:
+                - CronJob
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.timeZone || '' }}"
+            operator: Equals
+            value: ""
+      mutate:
+        patchStrategicMerge:
+          spec:
+            timeZone: Europe/Prague
+
 ---
 
 apiVersion: kyverno.io/v2
