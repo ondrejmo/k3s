@@ -18,7 +18,9 @@ spec:
     rollOutCiliumPods: true
     localRedirectPolicy: true
     kubeProxyReplacement: true
+{% if k3s_installed.rc == 1 %}
     policyAuditMode: {{ k3s_firewall.auditmode }}
+{% endif %}
     policyEnforcementMode: always
     routingMode: tunnel
     tunnelProtocol: geneve
