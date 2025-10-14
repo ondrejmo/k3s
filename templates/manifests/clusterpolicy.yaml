@@ -110,9 +110,14 @@ spec:
                 containers:
                   - (name): "{{ element.name }}"
                     resources:
+                      # minimal viable pod
                       requests:
                         +(memory): 128Mi
                         +(cpu): 100m
+                      # half a smallest node
+                      limits:
+                        +(memory): 16Gi
+                        +(cpu): 4000m
                     env:
                       - name: TZ
                         value: Europe/Prague
