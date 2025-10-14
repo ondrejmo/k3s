@@ -6,7 +6,7 @@ galaxy_info:
   description: https://github.com/rancher/k3s
   company: infrastructure
   license: GLWTPL
-  min_ansible_version: "2.10"
+  min_ansible_version: "2.18"
 
   galaxy_tags:
     - amd64
