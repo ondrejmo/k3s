@@ -136,7 +136,7 @@ k3s_flows:
 # Versions of all components
 k3s_components:
   cert_manager: "1.19.1"
-  cilium: "1.18.2"
+  cilium: "1.18.3"
   external_dns: "0.19.0"
   external_dns_mikrotik: "1.4.27"
   external_snapshotter: "8.2.0" # mandated by longhorn
@@ -147,19 +147,19 @@ k3s_components:
   kyverno: "3.5.2" # chart version
   local_path_provisioner: "0.0.31"
   longhorn: "1.10.0"
-  node_exporter: "1.9.1"
+  node_exporter: "1.10.2"
   metrics_server: "0.8.0"
-  prometheus: "3.7.1"
+  prometheus: "3.7.3"
   prometheus_operator: "0.86.1"
-  traefik: "37.1.2" # chart version
+  traefik: "37.2.0" # chart version
   trivy_operator: "0.31.0" # chart version
   trust_manager: "0.20.2"
   vector: "0.50.0"
 
 # Versions of CLI components
 k3s_clis:
-  cilium: "0.18.7"
+  cilium: "0.18.8"
   etcdctl: "3.6.5"
   helm: "3.19.0"
-  hubble: "1.18.0"
+  hubble: "1.18.3"
   nerdctl: "2.1.5"
