@@ -158,9 +158,8 @@ spec:
         - ports:
             - port: "80"
               protocol: TCP
-          # TODO: https://github.com/cilium/cilium/issues/11672
-          # rules:
-          #   http: [{}]
+          rules:
+            http: [{}]
 
 ---
 
