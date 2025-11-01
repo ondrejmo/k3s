@@ -140,6 +140,31 @@ spec:
 
 ---
 
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-service-defaults
+
+spec:
+  rules:
+    - name: disable-loadbalancernodeports
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.type }}"
+            operator: Equals
+            value: LoadBalancer
+      mutate:
+        patchStrategicMerge:
+          spec:
+            allocateLoadBalancerNodePorts: false
+
+---
+
 apiVersion: kyverno.io/v2
 kind: ClusterCleanupPolicy
 metadata:
